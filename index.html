@@ -1,0 +1,930 @@
+<!DOCTYPE html>
+<html lang="en-GB">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>SABAI crew expenses</title>
+<meta name="description" content="Send receipts to the Captain and see where each expense has got to.">
+<meta name="robots" content="noindex, nofollow">
+<meta name="theme-color" content="#FAF4E8">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-title" content="Expenses">
+<meta name="apple-mobile-web-app-status-bar-style" content="default">
+<link rel="apple-touch-icon" href="apple-touch-icon.png">
+<link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 32 32'%3E%3Crect width='32' height='32' rx='7' fill='%2313253B'/%3E%3Cpath d='M9 8h11l4 4v12H9z' fill='%23fff'/%3E%3Cpath d='M12 15h9M12 19h6' stroke='%23AE8752' stroke-width='2'/%3E%3C/svg%3E">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Bodoni+Moda:ital,opsz,wght@0,6..96,400..700;1,6..96,400..600&family=Jost:wght@400;500;600&display=swap" rel="stylesheet">
+<style>
+:root{
+  --bg:#FAF4E8; --paper:#FFFDF8; --sand:#F2EADB; --line:#E6DAC4; --line2:#D6C6AA;
+  --navy:#13253B; --navy2:#1F3754; --ink:#1C2632; --muted:#6E685E; --faint:#9A9284;
+  --gold:#AE8752; --gold2:#C7A473; --ok:#3B6A50; --oksoft:#E3EEE6; --warn:#9C6127; --warnsoft:#F7EAD8; --bad:#A3392F; --badsoft:#F6E1DD;
+  --serif:"Bodoni Moda","Didot","Bodoni 72",Georgia,serif; --sans:"Jost","Avenir Next","Avenir",system-ui,-apple-system,"Segoe UI",sans-serif;
+}
+*{box-sizing:border-box}
+html,body{margin:0;padding:0}
+body{background:var(--bg);color:var(--ink);font:400 16.5px/1.55 var(--sans);-webkit-font-smoothing:antialiased;-webkit-text-size-adjust:100%;min-height:100vh}
+button,input,select,textarea{font:inherit;color:inherit}
+button{cursor:pointer}
+a{color:var(--navy)}
+img{display:block;max-width:100%}
+.wrap{max-width:720px;margin:0 auto;padding:0 16px}
+.wide .wrap{max-width:980px}
+.hidden{display:none!important}
+.small{font-size:14px;color:var(--muted)}
+.muted{color:var(--muted)}
+.eyebrow{font:500 11.5px/1.2 var(--sans);letter-spacing:.26em;text-transform:uppercase;color:var(--gold);margin:0}
+
+/* header */
+.top{padding:calc(18px + env(safe-area-inset-top)) 0 14px;border-bottom:1px solid var(--line);margin-bottom:16px}
+.brand{display:flex;align-items:center;gap:12px}
+.logo{display:inline-block;height:17px;line-height:0;color:var(--navy)}
+.logo svg{height:100%;width:auto}
+.top h1{font:400 32px/1.1 var(--serif);color:var(--navy);margin:14px 0 2px}
+.top .sub{margin:0;color:var(--muted);font-size:15px}
+.toprow{display:flex;justify-content:space-between;align-items:flex-end;gap:12px;flex-wrap:wrap}
+
+/* buttons */
+.btn{display:inline-flex;align-items:center;justify-content:center;gap:8px;border:0;border-radius:999px;padding:14px 22px;min-height:50px;font:500 16px/1 var(--sans);text-decoration:none;transition:background .2s,transform .1s}
+.btn:active{transform:scale(.98)}
+.btn.primary{background:var(--navy);color:#fff;box-shadow:0 12px 22px -14px rgba(19,37,59,.9)}
+.btn.primary:hover{background:var(--navy2)}
+.btn.ghost{background:var(--paper);color:var(--navy);border:1px solid var(--line2)}
+.btn.small{min-height:40px;padding:9px 16px;font-size:14.5px}
+.btn.wide{width:100%}
+.btn.danger{background:var(--paper);color:var(--bad);border:1px solid #E3C1BB}
+.btn[disabled]{opacity:.45;cursor:not-allowed;box-shadow:none}
+.linkbtn{background:none;border:0;padding:6px 0;color:var(--navy);font:500 15px/1.3 var(--sans);text-decoration:underline;text-decoration-color:var(--gold2);text-underline-offset:4px}
+.linkbtn.bad{color:var(--bad);text-decoration-color:#E3C1BB}
+.btns{display:flex;flex-wrap:wrap;gap:10px;align-items:center;margin:14px 0}
+
+/* notes and pills */
+.note{background:var(--sand);border-left:3px solid var(--gold);border-radius:10px;padding:11px 14px;margin:12px 0;font-size:15px}
+.note.test{background:var(--warnsoft);border-color:var(--warn)}
+.note.ok{background:var(--oksoft);border-color:var(--ok)}
+.note.bad{background:var(--badsoft);border-color:var(--bad)}
+.note p{margin:0 0 4px}.note p:last-child{margin:0}
+.note .x{float:right;background:none;border:0;font-size:20px;line-height:1;color:var(--muted);padding:0 0 4px 10px}
+.pill{display:inline-block;font:500 12.5px/1 var(--sans);border-radius:999px;padding:6px 10px;background:var(--sand);color:var(--navy);margin:2px 6px 2px 0;white-space:nowrap}
+.pill.ok{background:var(--oksoft);color:var(--ok)}
+.pill.warn{background:var(--warnsoft);color:var(--warn)}
+.pill.bad{background:var(--badsoft);color:var(--bad)}
+.pill.claim{background:var(--navy);color:#fff}
+.pill.dim{background:#EEE9DF;color:var(--muted)}
+.pill.test{background:#FCE9C8;color:#8A5300}
+
+/* tiles */
+.tiles{display:grid;grid-template-columns:repeat(3,1fr);gap:10px;margin:4px 0 14px}
+.tile{background:var(--paper);border:1px solid var(--line);border-radius:14px;padding:10px 12px}
+.tile .k{display:block;font:500 11px/1.2 var(--sans);letter-spacing:.1em;text-transform:uppercase;color:var(--muted)}
+.tile .v{font:400 22px/1.2 var(--serif);color:var(--navy);margin-top:4px;font-variant-numeric:tabular-nums}
+.tile .s{font-size:13px;color:var(--muted)}
+
+/* expense cards */
+.ex{background:var(--paper);border:1px solid var(--line);border-radius:16px;padding:14px 16px;margin:0 0 12px}
+.exh{display:flex;justify-content:space-between;gap:12px;align-items:baseline}
+.exh b{font-weight:500;color:var(--navy);font-size:17px}
+.amt{font:500 17px/1.2 var(--sans);font-variant-numeric:tabular-nums;white-space:nowrap;color:var(--navy)}
+.amt small{display:block;text-align:right;font-size:13px;color:var(--muted);font-weight:400}
+.ex .what{margin:2px 0 4px}
+.ex .meta{margin:0 0 8px;font-size:14px;color:var(--muted)}
+.why{background:var(--badsoft);border-radius:10px;padding:9px 12px;margin:8px 0;font-size:15px;color:var(--bad)}
+.acts{display:flex;flex-wrap:wrap;gap:4px 18px;margin-top:6px}
+.rimg{margin-top:8px}
+.rimg img{border:1px solid var(--line);border-radius:10px;cursor:zoom-in;max-height:420px;width:auto}
+.rimg .wait{font-size:14px;color:var(--muted)}
+.ex.test{border-style:dashed;border-color:#E2C48F}
+h2.sec{font:400 24px/1.2 var(--serif);color:var(--navy);margin:26px 0 10px}
+h3.who{font:500 19px/1.25 var(--serif);color:var(--navy);margin:22px 0 2px}
+
+/* the form */
+.item{background:var(--paper);border:1px solid var(--line);border-radius:18px;padding:16px;margin:0 0 16px}
+.item .ih{display:flex;justify-content:space-between;align-items:center;margin:0 0 6px}
+.item .ih h2{font:400 22px/1.2 var(--serif);color:var(--navy);margin:0}
+.fld{margin:12px 0 0}
+.fld>label,.fld>.lab{display:block;font:500 14px/1.3 var(--sans);color:var(--navy);margin:0 0 6px}
+.fld input[type=text],.fld input[type=date],.fld input[type=number],.fld select,.fld textarea,.inp{width:100%;border:1px solid var(--line2);border-radius:12px;background:#fff;padding:12px 13px;font-size:16.5px;min-height:50px;-webkit-appearance:none;appearance:none}
+.fld select,.inp.sel{background:#fff url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='12' height='8'%3E%3Cpath d='M1 1l5 5 5-5' fill='none' stroke='%2313253B' stroke-width='1.6'/%3E%3C/svg%3E") no-repeat right 14px center;padding-right:36px}
+.fld textarea{min-height:76px;resize:vertical}
+.fld input:focus,.fld select:focus,.fld textarea:focus,.inp:focus{outline:2px solid var(--gold2);outline-offset:1px;border-color:var(--gold)}
+.fld.bad input,.fld.bad select,.fld.bad textarea,.fld.bad .chips,.fld.bad .photos{border-color:var(--bad);box-shadow:0 0 0 1px var(--bad)}
+.fld .err{color:var(--bad);font-size:14px;margin:5px 0 0}
+.two{display:grid;grid-template-columns:1fr 1fr;gap:0 12px}
+.amtrow{display:grid;grid-template-columns:1fr 130px;gap:0 12px}
+.chips{display:flex;flex-direction:column;gap:8px;border-radius:12px}
+.chip{display:flex;align-items:center;gap:10px;border:1px solid var(--line2);border-radius:12px;background:#fff;padding:11px 13px;min-height:48px}
+.chip input{width:20px;height:20px;accent-color:var(--navy);margin:0}
+.chip:has(input:checked){border-color:var(--navy);box-shadow:0 0 0 1px var(--navy)}
+.photos{display:flex;flex-wrap:wrap;gap:10px;border-radius:12px}
+.ph{position:relative;width:92px;height:118px;border-radius:10px;overflow:hidden;border:1px solid var(--line2);background:var(--sand);margin:0}
+.ph img{width:100%;height:100%;object-fit:cover}
+.ph .pdf{display:flex;height:100%;align-items:center;justify-content:center;font:600 15px/1 var(--sans);color:var(--navy)}
+.ph .st{position:absolute;left:0;right:0;bottom:0;background:rgba(19,37,59,.82);color:#fff;font-size:12px;text-align:center;padding:4px 2px}
+.ph .st.bad{background:var(--bad)}
+.ph .st button{background:none;border:0;color:#fff;text-decoration:underline;font-size:12px;padding:0}
+.ph .rm{position:absolute;top:4px;right:4px;width:28px;height:28px;border-radius:50%;border:0;background:rgba(255,255,255,.92);color:var(--navy);font-size:17px;line-height:28px;padding:0}
+.addph{width:92px;height:118px;border:1.5px dashed var(--line2);border-radius:10px;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:6px;color:var(--navy);font-size:13.5px;text-align:center;cursor:pointer;background:#fff;padding:6px}
+.addph input{position:absolute;width:1px;height:1px;opacity:0}
+.keep{display:flex;gap:10px;align-items:center;margin:8px 0 0}
+.keep input{width:20px;height:20px;accent-color:var(--navy)}
+.corr{background:var(--warnsoft);border-radius:10px;padding:9px 12px;margin:4px 0 4px;font-size:14.5px}
+
+/* review */
+.rv{display:grid;grid-template-columns:1fr auto;gap:2px 12px;padding:10px 0;border-top:1px solid var(--line)}
+.rv:first-child{border-top:0}
+.rv .thumbs{display:flex;gap:6px;margin-top:6px}
+.rv .thumbs img,.rv .thumbs span{width:44px;height:56px;object-fit:cover;border-radius:6px;border:1px solid var(--line)}
+.rv .thumbs span{display:flex;align-items:center;justify-content:center;font-size:11px;font-weight:600;color:var(--navy);background:var(--sand)}
+
+/* Captain */
+.seg{display:grid;grid-template-columns:repeat(4,1fr);border:1px solid var(--line2);border-radius:12px;overflow:hidden;margin-top:10px}
+.seg button{border:0;background:#fff;padding:12px 4px;font:500 14.5px/1.1 var(--sans);color:var(--navy);min-height:48px}
+.seg button+button{border-left:1px solid var(--line2)}
+.seg button[aria-pressed=true][data-d=approve]{background:var(--ok);color:#fff}
+.seg button[aria-pressed=true][data-d=back]{background:var(--warn);color:#fff}
+.seg button[aria-pressed=true][data-d=deny]{background:var(--bad);color:#fff}
+.seg button[aria-pressed=true][data-d=later]{background:var(--sand)}
+.ex.cap.approve{border-color:var(--ok);box-shadow:0 0 0 1px var(--ok)}
+.ex.cap.back{border-color:var(--warn);box-shadow:0 0 0 1px var(--warn)}
+.ex.cap.deny{border-color:var(--bad);box-shadow:0 0 0 1px var(--bad)}
+.ex .flags{margin:-2px 0 8px}
+.phead{display:flex;flex-wrap:wrap;justify-content:space-between;align-items:flex-end;gap:8px 14px;margin:24px 0 10px}
+.phead h3.who{margin:0}
+.month{display:flex;flex-wrap:wrap;justify-content:space-between;align-items:baseline;gap:4px 12px;margin:26px 0 2px;padding-bottom:6px;border-bottom:1px solid var(--line)}
+.month h3{font:400 21px/1.2 var(--serif);color:var(--navy);margin:0}
+.month+.rrow{border-top:0}
+.dock{position:sticky;bottom:0;background:rgba(250,244,232,.96);backdrop-filter:blur(8px);-webkit-backdrop-filter:blur(8px);border-top:1px solid var(--line);padding:12px 0 calc(12px + env(safe-area-inset-bottom));margin-top:18px;z-index:5}
+.dock .wrap{display:flex;gap:10px;align-items:center}
+.dock .btn.primary{flex:1}
+.rrow{display:grid;grid-template-columns:1fr auto;gap:2px 10px;padding:10px 0;border-top:1px solid var(--line);font-size:15px}
+
+/* Purser and Mate */
+.tbl{width:100%;border-collapse:collapse;font-size:14.5px}
+.tbl th{text-align:left;font:500 11px/1.2 var(--sans);letter-spacing:.1em;text-transform:uppercase;color:var(--muted);padding:8px 8px;border-bottom:1px solid var(--line)}
+.tbl td{padding:9px 8px;border-top:1px solid var(--line);vertical-align:top}
+.tbl tr:first-child td{border-top:0}
+.tbl .r{text-align:right;font-variant-numeric:tabular-nums;white-space:nowrap}
+.tblw{overflow-x:auto;background:var(--paper);border:1px solid var(--line);border-radius:14px;padding:4px 8px}
+.tabs{display:flex;gap:6px;overflow-x:auto;padding:4px 0 12px;scrollbar-width:none}
+.tabs button{flex:0 0 auto;border:1px solid var(--line);background:var(--paper);border-radius:999px;padding:10px 16px;font:500 14.5px/1 var(--sans);color:var(--navy)}
+.tabs button[aria-selected=true]{background:var(--navy);color:#fff;border-color:var(--navy)}
+.crow{background:var(--paper);border:1px solid var(--line);border-radius:14px;padding:12px 14px;margin:0 0 10px}
+.crow.off{opacity:.62}
+.crow .cl{display:flex;flex-wrap:wrap;gap:8px 14px;align-items:center;justify-content:space-between}
+.crow .cl b{font-weight:500;color:var(--navy);font-size:17px}
+.crow .ctl{display:flex;flex-wrap:wrap;gap:8px 14px;align-items:center;margin-top:8px}
+.crow select{min-height:40px;padding:7px 34px 7px 11px;font-size:15px;width:auto}
+.sw{display:inline-flex;align-items:center;gap:8px;font-size:15px}
+.sw input{width:20px;height:20px;accent-color:var(--navy)}
+.linkbox{margin-top:10px;padding-top:10px;border-top:1px solid var(--line)}
+.linktext{font:13px/1.4 Menlo,Consolas,monospace;word-break:break-all;background:#fff;border:1px solid var(--line);border-radius:8px;padding:8px 10px;margin:0 0 8px}
+.qr{width:170px;height:170px;background:#fff;border:1px solid var(--line);border-radius:12px;padding:8px;margin:8px 0}
+.qr svg{width:100%;height:100%}
+.setrow{display:flex;gap:14px;align-items:flex-start;justify-content:space-between;background:var(--paper);border:1px solid var(--line);border-radius:14px;padding:14px 16px;margin:0 0 10px}
+.setrow p{margin:2px 0 0;font-size:14px;color:var(--muted)}
+.setrow b{font-weight:500;color:var(--navy)}
+.addcrew{display:grid;grid-template-columns:1fr 180px auto;gap:10px;align-items:end;background:var(--paper);border:1px solid var(--line);border-radius:14px;padding:14px;margin:0 0 16px}
+.addcrew .fld{margin:0}
+
+/* overlays */
+.toast{position:fixed;left:50%;bottom:calc(84px + env(safe-area-inset-bottom));transform:translateX(-50%);background:var(--navy);color:#fff;padding:12px 18px;border-radius:18px;font-size:15px;text-align:center;z-index:50;max-width:calc(100% - 32px);box-shadow:0 12px 30px -12px rgba(0,0,0,.5)}
+.busy{position:fixed;inset:0;background:rgba(250,244,232,.92);display:flex;flex-direction:column;align-items:center;justify-content:center;z-index:40;text-align:center;padding:24px}
+.busy p{font:400 22px/1.3 var(--serif);color:var(--navy);margin:16px 0 4px}
+.spin{width:38px;height:38px;border-radius:50%;border:3px solid var(--line2);border-top-color:var(--navy);animation:spin 1s linear infinite}
+@keyframes spin{to{transform:rotate(360deg)}}
+.viewer{position:fixed;inset:0;background:rgba(11,24,40,.94);z-index:60;overflow:auto;padding:calc(56px + env(safe-area-inset-top)) 10px 20px}
+.viewer img{margin:0 auto;max-width:100%;border-radius:6px;background:#fff}
+.viewer .close{position:fixed;top:calc(10px + env(safe-area-inset-top));right:12px;background:#fff;border:0;border-radius:999px;padding:10px 16px;font:500 15px/1 var(--sans);color:var(--navy)}
+.loading{min-height:70vh;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:18px;color:var(--muted)}
+.loading .logo{height:22px}
+@media (max-width:560px){.tiles{grid-template-columns:1fr 1fr 1fr}.tile .v{font-size:19px}.addcrew{grid-template-columns:1fr}.top h1{font-size:28px}}
+@media (prefers-reduced-motion:reduce){*{animation:none!important;transition:none!important}}
+</style>
+</head>
+<body>
+<div id="app"><div class="loading"><div class="spin"></div></div></div>
+<script>
+var EXPENSES_API = 'https://script.google.com/macros/s/AKfycbxGKUUj0UKTkLPy3PWt6MbruKdDbvmHAQYgzwXzSxdEKDVoaoEIDZxb1R58HN37941b/exec';
+</script>
+<script>
+(function () {
+  'use strict';
+  var API = window.EXPENSES_API || '';
+  var LOGO = '<svg aria-hidden="true" xmlns="http://www.w3.org/2000/svg" viewBox="60.0 -20.0 2975.0 690.0"><path fill="currentColor" d="M239 670C447 670 521 536 521 448C521 275 249 278 249 166C249 115 291 62 375 62C429 62 490 82 512 129H522L533 21C490 0 430 -10 375 -10C193 -10 101 89 101 201C101 382 372 370 372 488C372 540 326 597 233 597C153 597 95 567 72 524H62L60 630C103 653 159 670 239 670ZM1131 340 1031 -20C1020 -10 960 24 905 30L762 340C625 633 614 640 560 650L559 660H745L746 650C723 646 716 640 718 625C719 607 746 543 787 452H1020C1047 548 1061 601 1059 620C1057 637 1045 646 1024 650L1023 660H1258L1259 650C1216 640 1207 618 1131 340ZM819 379 837 340 932 128 990 340C994 354 997 367 1000 379ZM1756 290C1843 254 1879 194 1879 133C1879 51 1803 0 1669 0H1394L1393 10C1462 20 1459 50 1430 330C1400 610 1397 640 1326 650L1325 660H1647C1843 660 1904 530 1904 446C1904 355 1840 306 1756 290ZM1649 66C1720 66 1758 102 1758 158C1758 190 1745 244 1694 283H1686H1569L1592 66ZM1627 594H1594C1537 594 1540 567 1559 380L1562 349H1617C1717 349 1760 389 1760 454C1760 504 1743 594 1627 594ZM2497 340 2397 -20C2386 -10 2326 24 2271 30L2128 340C1991 633 1980 640 1926 650L1925 660H2111L2112 650C2089 646 2082 640 2084 625C2085 607 2112 543 2153 452H2386C2413 548 2427 601 2425 620C2423 637 2411 646 2390 650L2389 660H2624L2625 650C2582 640 2573 618 2497 340ZM2185 379 2203 340 2298 128 2356 340C2360 354 2363 367 2366 379ZM2691 660H2966L2967 650C2898 640 2901 610 2931 330C2960 50 2963 20 3034 10L3035 0H2760L2759 10C2828 20 2825 50 2796 330C2766 610 2763 640 2692 650Z"/></svg>';
+  var app = document.getElementById('app');
+  var NS = 'sabai-ex:';
+  var B = null;                 // what boot returned
+  var V = { screen: 'home' };   // what is on screen
+
+  /* ---------------------------------------------------------------- helpers */
+  function esc(s) { return String(s == null ? '' : s).replace(/[&<>"']/g, function (c) { return { '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[c]; }); }
+  function $(id) { return document.getElementById(id); }
+  function each(sel, fn, root) { Array.prototype.forEach.call((root || document).querySelectorAll(sel), fn); }
+  function store(k, v) { try { localStorage.setItem(NS + k, JSON.stringify(v)); return true; } catch (e) { return false; } }
+  function load(k) { try { return JSON.parse(localStorage.getItem(NS + k) || 'null'); } catch (e) { return null; } }
+  function drop(k) { try { localStorage.removeItem(NS + k); } catch (e) {} }
+  function errText(e) { return String(e && e.message || e).replace(/^(Error|Exception):\s*/, ''); }
+  function uid() { return Math.random().toString(36).slice(2, 10) + Date.now().toString(36); }
+  function num(n) { return (Math.round(n * 100) / 100).toLocaleString('en-GB', { minimumFractionDigits: 2, maximumFractionDigits: 2 }); }
+  function money(n, cur) { if (n == null || n === '') return ''; return cur === 'EUR' ? '\u20ac' + num(n) : num(n) + (cur ? ' ' + cur : ''); }
+  function eur(n) { return n == null ? '' : '\u20ac' + num(n); }
+  function first(n) { return String(n || '').trim().split(/\s+/)[0] || ''; }
+  function today() { var d = new Date(); return d.getFullYear() + '-' + ('0' + (d.getMonth() + 1)).slice(-2) + '-' + ('0' + d.getDate()).slice(-2); }
+  var MON = ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun', 'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec'];
+  function day(iso) { var m = /^(\d{4})-(\d{2})-(\d{2})$/.exec(iso || ''); return m ? +m[3] + ' ' + MON[+m[2] - 1] + ' ' + m[1] : ''; }
+  function logo() { return '<span class="logo" role="img" aria-label="SABAI">' + LOGO + '</span>'; }
+  function paint(html, keepScroll) { var y = window.scrollY; app.innerHTML = html; window.scrollTo(0, keepScroll ? y : 0); }
+  function toast(msg, ms) {
+    var old = document.querySelector('.toast'); if (old) old.remove();
+    var t = document.createElement('div'); t.className = 'toast'; t.setAttribute('role', 'status'); t.textContent = msg; document.body.appendChild(t);
+    setTimeout(function () { t.remove(); }, ms || 3200);
+  }
+  function busy(text, small) {
+    var b = document.createElement('div'); b.className = 'busy'; b.setAttribute('role', 'status');
+    b.innerHTML = '<div class="spin"></div><p>' + esc(text) + '</p>' + (small ? '<span class="small">' + esc(small) + '</span>' : '');
+    document.body.appendChild(b);
+    return { text: function (t) { b.querySelector('p').textContent = t; }, done: function () { b.remove(); } };
+  }
+  function copy(text) {
+    function fallback() { var t = document.createElement('textarea'); t.value = text; document.body.appendChild(t); t.select(); try { document.execCommand('copy'); } catch (e) {} t.remove(); }
+    if (navigator.clipboard && navigator.clipboard.writeText) navigator.clipboard.writeText(text).then(null, fallback); else fallback();
+    toast('Link copied');
+  }
+  function loadQr(cb) {
+    if (window.qrcode) return cb(true);
+    var s = document.createElement('script'); s.src = 'https://cdnjs.cloudflare.com/ajax/libs/qrcode-generator/1.4.4/qrcode.min.js';
+    s.onload = function () { cb(!!window.qrcode); }; s.onerror = function () { cb(false); }; document.head.appendChild(s);
+  }
+  function qrInto(text, box) {
+    loadQr(function (ok) {
+      if (!ok) { box.textContent = 'QR code not available offline'; return; }
+      var q = window.qrcode(0, 'M'); q.addData(text); q.make(); box.innerHTML = q.createSvgTag({ cellSize: 4, margin: 2, scalable: true });
+    });
+  }
+
+  /* ---------------------------------------------------------------- the link and the server */
+  var K = '';
+  try { K = (new URLSearchParams(location.search).get('k') || '').trim(); } catch (e) {}
+  if (!K) {   // opened from the bare address or an old bookmark: use the link opened last on this phone
+    K = load('k') || '';
+    if (K) { try { history.replaceState(null, '', location.pathname + '?k=' + encodeURIComponent(K)); } catch (e) {} }
+  }
+
+  function api(fn, a, ms) {
+    a = a || {}; a.k = K;
+    var ctl = window.AbortController ? new AbortController() : null;
+    var timer = ctl ? setTimeout(function () { ctl.abort(); }, ms || 150000) : 0;
+    return fetch(API, { method: 'POST', credentials: 'omit', redirect: 'follow', headers: { 'Content-Type': 'text/plain;charset=utf-8' },
+      body: JSON.stringify({ fn: fn, args: [a] }), signal: ctl ? ctl.signal : undefined })
+      .then(function (r) { return r.text(); }, function () { throw new Error('No connection. Check the signal and try again.'); })
+      .then(function (t) {
+        clearTimeout(timer);
+        var j = null; try { j = JSON.parse(t); } catch (e) { throw new Error('The expenses service did not answer properly. Please try again.'); }
+        if (!j || !j.ok) throw new Error((j && j.error) || 'Something went wrong. Please try again.');
+        return j.data;
+      }, function (e) { clearTimeout(timer); throw e; });
+  }
+
+  function start() {
+    if (!K) return message('Open your own link', 'This page needs the personal link the Mate sent you. Open it from that message.');
+    paint('<div class="loading">' + logo() + '<div class="spin"></div><span>Opening your expenses</span></div>');
+    api('boot').then(function (b) { store('k', K); B = b; V = { screen: 'home', tab: b.role === 'admin' ? load('tab-admin') || '' : '' }; show(); },
+      function (e) { message('This link did not open', errText(e), true); });
+  }
+  function reload(after) {
+    return api('boot').then(function (b) { B = b; show(true); if (after) after(); }, function (e) { toast(errText(e), 5000); });
+  }
+  function message(title, text, retry) {
+    paint('<header class="top"><div class="wrap"><div class="brand">' + logo() + '<p class="eyebrow">Crew expenses</p></div><h1>' + esc(title) + '</h1></div></header>' +
+      '<div class="wrap"><p>' + esc(text) + '</p>' + (retry ? '<div class="btns"><button class="btn primary" data-act="retry">Try again</button></div>' : '') + '</div>');
+  }
+  function head(title, sub, right) {
+    return '<header class="top"><div class="wrap"><div class="brand">' + logo() + '<p class="eyebrow">Crew expenses</p></div>' +
+      '<div class="toprow"><div><h1>' + esc(title) + '</h1>' + (sub ? '<p class="sub">' + sub + '</p>' : '') + '</div>' + (right || '') + '</div></div></header>';
+  }
+  function refreshBtn() { return '<button class="btn ghost small" data-act="refresh">Refresh</button>'; }
+  function testNote(text) { return B.test ? '<div class="note test"><p><b>Test mode.</b> ' + esc(text) + '</p></div>' : ''; }
+  function homeHint() {
+    var ios = /iPhone|iPad|iPod/.test(navigator.userAgent), android = /Android/.test(navigator.userAgent);
+    var standalone = window.navigator.standalone || (window.matchMedia && matchMedia('(display-mode: standalone)').matches);
+    if (standalone || load('hint-off') || (!ios && !android)) return '';
+    return '<div class="note"><button class="x" data-act="hintoff" aria-label="Hide this tip">&times;</button><p><b>Keep this page on your Home Screen.</b> ' +
+      (ios ? 'In Safari, tap the Share button, then Add to Home Screen.' : 'In Chrome, tap the three dots, then Add to Home screen.') +
+      ' It then opens like an app, already signed in.</p></div>';
+  }
+
+  function show(keepScroll) {
+    document.body.className = B.role === 'admin' || B.role === 'purser' ? 'wide' : '';
+    if (B.role === 'crew') return crewShow(keepScroll);
+    if (B.role === 'captain') return captainShow(keepScroll);
+    if (B.role === 'purser') return paint(head('Claims', 'Purser \u00b7 as at ' + esc(B.asAt), refreshBtn()) + '<div class="wrap">' + homeHint() +
+      testNote('This page shows test expenses only, and claims made here are test claims.') + purserPanel(B.purser, false) + '</div>', keepScroll);
+    return adminShow(keepScroll);
+  }
+
+  /* ---------------------------------------------------------------- statuses */
+  function statusPill(l) {
+    var s = l.test ? '<span class="pill test">TEST</span>' : '';
+    if (l.status === 'Approved') return s + (l.claim ? '<span class="pill claim">On claim ' + esc(l.claim) + '</span>' : '<span class="pill ok">Approved ' + esc(l.approvedOn) + '</span>');
+    if (l.status === 'Sent back') return s + '<span class="pill bad">Sent back' + (l.backOn ? ' ' + esc(l.backOn.slice(0, 11)) : '') + '</span>' +
+      (l.replacedBy ? '<span class="pill dim">Corrected as ' + esc(l.replacedBy) + '</span>' : '');
+    if (l.status === 'Denied') return s + '<span class="pill bad">Denied' + (l.backOn ? ' ' + esc(l.backOn.slice(0, 11)) : '') + '</span>';
+    if (l.status === 'Withdrawn') return s + '<span class="pill dim">Withdrawn</span>' + (l.replacedBy ? '<span class="pill dim">Sent again as ' + esc(l.replacedBy) + '</span>' : '');
+    return s + '<span class="pill warn">Waiting for the Captain</span>';
+  }
+  function amountBox(l) {
+    return '<span class="amt">' + esc(money(l.amount, l.currency || '')) + (l.eur != null && l.currency !== 'EUR' ? '<small>' + esc(eur(l.eur)) + '</small>' : '') + '</span>';
+  }
+  function short(paid) { return String(paid || '').replace(' (pay me back)', '').replace(' (petty cash)', ''); }
+
+  /* ---------------------------------------------------------------- crew */
+  function draftKey() { return 'draft-' + B.me.ref; }
+  var D = null;                 // the expenses being written, saved on the phone as they go
+  var PHOTO = {};               // photo data still to be sent, by photo id (memory only)
+  function draft() {
+    if (D) return D;
+    D = load(draftKey()) || { items: [] };
+    D.items.forEach(function (it) { it.photos = (it.photos || []).filter(function (p) { return p.up || PHOTO[p.id]; }).concat((it.photos || []).filter(function (p) { return !p.up && !PHOTO[p.id]; }).map(function (p) { p.state = 'lost'; return p; })); });
+    return D;
+  }
+  function saveDraft() { if (!store(draftKey(), D)) toast('This phone is short of space; keep the page open until you send.'); }
+  function blankItem() {
+    var last = load('last-' + B.me.ref) || {};
+    return { id: uid(), date: today(), shop: '', what: '', category: '', paid: last.paid || '', amount: '', currency: last.currency || 'EUR', notes: '', photos: [], replaces: '', keep: false, keepN: 0, reason: '' };
+  }
+
+  function crewShow(keepScroll) {
+    if (V.screen === 'add') return addShow(keepScroll);
+    if (V.screen === 'review') return reviewShow();
+    if (V.screen === 'sent') return sentShow();
+    var ex = B.expenses, d = draft();
+    var waiting = ex.filter(function (l) { return l.status === 'Waiting'; });
+    var approved = ex.filter(function (l) { return l.status === 'Approved'; });
+    var back = ex.filter(function (l) { return l.status === 'Sent back' && !l.replacedBy; });
+    var sum = function (a) { return a.reduce(function (s, l) { return s + (l.eur || 0); }, 0); };
+    var n = d.items.length;
+    var html = head('Hello, ' + first(B.me.name), esc(B.me.position)) + '<div class="wrap">' + homeHint() +
+      testNote('Expenses you send now are tests. They go only to the Mate and never onto a real claim.') +
+      '<div class="btns"><button class="btn primary wide" data-act="add">' + (n ? 'Carry on with your ' + n + ' unsent expense' + (n > 1 ? 's' : '') : 'Add expenses') + '</button></div>' +
+      '<div class="tiles"><div class="tile"><span class="k">Waiting</span><div class="v">' + waiting.length + '</div><span class="s">' + esc(eur(sum(waiting))) + '</span></div>' +
+      '<div class="tile"><span class="k">Approved</span><div class="v">' + approved.length + '</div><span class="s">' + esc(eur(sum(approved))) + '</span></div>' +
+      '<div class="tile"><span class="k">Sent back</span><div class="v">' + back.length + '</div><span class="s">' + (back.length ? 'to correct' : '&nbsp;') + '</span></div></div>' +
+      '<div class="toprow"><h2 class="sec">My expenses</h2>' + refreshBtn() + '</div>';
+    if (!ex.length) html += '<p class="muted">Nothing yet. Expenses you send appear here with where each one has got to.</p>';
+    html += ex.map(function (l) {
+      var acts = [];
+      if (l.receipts) acts.push('<button class="linkbtn" data-act="receipt" data-ref="' + esc(l.ref) + '">Show receipt</button>');
+      if (l.status === 'Sent back' && !l.replacedBy) acts.push('<button class="linkbtn" data-act="correct" data-ref="' + esc(l.ref) + '">Correct and send again</button>');
+      if (l.status === 'Waiting') acts.push('<button class="linkbtn bad" data-act="withdraw" data-ref="' + esc(l.ref) + '">Withdraw</button>');
+      return '<article class="ex' + (l.test ? ' test' : '') + '"><div class="exh"><b>' + esc(l.shop) + '</b>' + amountBox(l) + '</div>' +
+        '<p class="what">' + esc(l.what) + '</p><p class="meta">' + esc([l.date, short(l.paid), l.ref].filter(Boolean).join(' \u00b7 ')) + '</p>' +
+        statusPill(l) + (l.reason && !l.replacedBy ? '<div class="why"><b>The Captain:</b> ' + esc(l.reason) + '</div>' : '') +
+        (acts.length ? '<div class="acts">' + acts.join('') + '</div>' : '') + '<div class="rimg" id="r-' + esc(l.ref) + '"></div></article>';
+    }).join('');
+    html += '<p class="small" style="margin:24px 0 40px">Expenses sent on the Google Form show here too when the name on the form matches ' + esc(B.me.name) + '.</p></div>';
+    paint(html, keepScroll);
+  }
+
+  function addShow(keepScroll) {
+    var d = draft();
+    if (!d.items.length) { d.items.push(blankItem()); saveDraft(); }
+    var L = B.lists;
+    var html = head('Add expenses', 'One receipt per expense, up to ' + L.maxExpenses + ' at a time.') + '<div class="wrap">' +
+      testNote('These will be sent as tests.') +
+      d.items.map(function (it, i) { return itemHtml(it, i, d.items.length); }).join('') +
+      (d.items.length < L.maxExpenses ? '<div class="btns"><button class="btn ghost wide" data-act="more">+ Add another expense</button></div>' : '') +
+      '<div class="btns"><button class="btn primary wide" data-act="check">Check and send</button></div>' +
+      '<div class="btns" style="justify-content:center;margin-bottom:40px"><button class="linkbtn" data-act="home">Back to my expenses</button></div>' +
+      '<p class="small" style="text-align:center;margin:-24px 0 40px">Your answers are saved on this phone as you go.</p></div>';
+    paint(html, keepScroll);
+  }
+  function opt(v, label, sel) { return '<option value="' + esc(v) + '"' + (v === sel ? ' selected' : '') + '>' + esc(label) + '</option>'; }
+  function itemHtml(it, i, n) {
+    var L = B.lists, E = V.errors && V.errors[it.id] || {};
+    var f = function (key, label, inner) {
+      return '<div class="fld' + (E[key] ? ' bad' : '') + '" data-for="' + key + '">' + (label ? '<label for="' + key + '-' + it.id + '">' + label + '</label>' : '') + inner +
+        (E[key] ? '<p class="err">' + esc(E[key]) + '</p>' : '') + '</div>';
+    };
+    var at = function (key) { return ' id="' + key + '-' + it.id + '" data-f="' + key + '" data-item="' + it.id + '"'; };
+    return '<section class="item" id="it-' + it.id + '"><div class="ih"><h2>Expense ' + (i + 1) + '</h2>' +
+      (n > 1 || it.replaces ? '<button class="linkbtn bad" data-act="remove" data-item="' + it.id + '">Remove</button>' : '') + '</div>' +
+      (it.replaces ? '<div class="corr">Correcting ' + esc(it.replaces) + (it.reason ? '. The Captain: ' + esc(it.reason) : '') + '</div>' : '') +
+      f('photos', 'Receipt', photosHtml(it)) +
+      '<div class="two">' + f('date', 'Date on the receipt', '<input type="date"' + at('date') + ' value="' + esc(it.date) + '" max="' + today() + '">') +
+      f('amount', 'Amount', '<input type="text" inputmode="decimal" autocomplete="off"' + at('amount') + ' value="' + esc(it.amount) + '" placeholder="0.00">') + '</div>' +
+      f('currency', 'Currency', '<select' + at('currency') + '>' + L.currencies.map(function (c) { return opt(c, c, it.currency); }).join('') + '</select>') +
+      f('shop', 'Shop or supplier', '<input type="text" autocomplete="off"' + at('shop') + ' value="' + esc(it.shop) + '">') +
+      f('what', 'What was bought', '<input type="text" autocomplete="off"' + at('what') + ' value="' + esc(it.what) + '">') +
+      f('category', 'Category', '<select' + at('category') + '>' + opt('', 'Choose', it.category) + L.categories.map(function (c) { return opt(c, c, it.category); }).join('') + '</select>') +
+      f('paid', 'How was it paid?', '<div class="chips">' + L.paidWith.map(function (p) {
+        return '<label class="chip"><input type="radio" name="paid-' + it.id + '" value="' + esc(p) + '" data-f="paid" data-item="' + it.id + '"' + (p === it.paid ? ' checked' : '') + '>' + esc(p) + '</label>';
+      }).join('') + '</div>') +
+      f('notes', 'Notes (optional)', '<textarea' + at('notes') + ' placeholder="Anything the Captain or the Purser should know">' + esc(it.notes) + '</textarea>') +
+      '</section>';
+  }
+  function photosHtml(it) {
+    if (it.replaces && it.keepN) {
+      var keep = '<label class="keep"><input type="checkbox" data-f="keep" data-item="' + it.id + '"' + (it.keep ? ' checked' : '') + '> Keep the receipt photo already sent' + (it.keepN > 1 ? ' (' + it.keepN + ')' : '') + '</label>';
+      if (it.keep) return '<div id="ph-' + it.id + '">' + keep + '</div>';
+      return '<div id="ph-' + it.id + '">' + keep + '<div class="photos" style="margin-top:10px">' + thumbs(it) + '</div></div>';
+    }
+    return '<div class="photos" id="ph-' + it.id + '">' + thumbs(it) + '</div>';
+  }
+  function thumbs(it) {
+    var max = B.lists.maxFiles;
+    return it.photos.map(function (p) {
+      var st = p.state === 'sending' ? '<span class="st">Sending</span>' : p.state === 'failed' ? '<span class="st bad"><button data-act="retryph" data-item="' + it.id + '" data-ph="' + p.id + '">Not sent. Try again</button></span>'
+        : p.state === 'lost' ? '<span class="st bad">Add it again</span>' : '';
+      return '<figure class="ph">' + (p.thumb ? '<img src="' + p.thumb + '" alt="Receipt photo">' : '<span class="pdf">PDF</span>') + st +
+        '<button class="rm" data-act="rmph" data-item="' + it.id + '" data-ph="' + p.id + '" aria-label="Remove this photo">&times;</button></figure>';
+    }).join('') + (it.photos.length < max ? '<label class="addph"><input type="file" accept="image/*,application/pdf" multiple data-photo="' + it.id + '">' +
+      '<svg width="26" height="26" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M4 8.5h3.2L9 6h6l1.8 2.5H20V19H4z"/><circle cx="12" cy="13.2" r="3.4"/></svg>' +
+      (it.photos.length ? 'Add another page' : 'Take or choose a photo') + '</label>' : '');
+  }
+  function itemById(id) { return draft().items.filter(function (x) { return x.id === id; })[0]; }
+  function redrawPhotos(it) { var el = $('ph-' + it.id); if (el) el.outerHTML = photosHtml(it); }
+
+  // Photos: shrunk on the phone to about 1600 px (JPEG, under about 900 KB) and sent straight away, so Send only sends the words.
+  var SIDE = 1600, MAXB = 900 * 1024;
+  function readFile(file) { return new Promise(function (ok, no) { var r = new FileReader(); r.onload = function () { ok(r.result); }; r.onerror = function () { no(new Error('That file could not be read.')); }; r.readAsDataURL(file); }); }
+  function shrink(file) {
+    return new Promise(function (ok, no) {
+      var url = URL.createObjectURL(file), im = new Image();
+      im.onerror = function () { URL.revokeObjectURL(url); no(new Error('That photo could not be opened here. Take it again, or choose a JPEG.')); };
+      im.onload = function () {
+        URL.revokeObjectURL(url);
+        var w = im.naturalWidth, h = im.naturalHeight, src = im;
+        if (!w || !h) return no(new Error('That photo could not be opened here.'));
+        while (Math.max(w, h) > SIDE * 2) { var hc = document.createElement('canvas'); hc.width = Math.round(w / 2); hc.height = Math.round(h / 2); hc.getContext('2d').drawImage(src, 0, 0, hc.width, hc.height); src = hc; w = hc.width; h = hc.height; }
+        var draw = function (side) { var sc = Math.min(1, side / Math.max(w, h)), cv = document.createElement('canvas'); cv.width = Math.max(1, Math.round(w * sc)); cv.height = Math.max(1, Math.round(h * sc));
+          var cx = cv.getContext('2d'); cx.fillStyle = '#fff'; cx.fillRect(0, 0, cv.width, cv.height); cx.imageSmoothingQuality = 'high'; cx.drawImage(src, 0, 0, cv.width, cv.height); return cv; };
+        var big = draw(SIDE), out = '';
+        for (var q = 0.84; q >= 0.5 && !out; q -= 0.08) { var d = big.toDataURL('image/jpeg', q); if ((d.length - 23) * 0.75 <= MAXB) out = d; }
+        if (!out) out = draw(1200).toDataURL('image/jpeg', 0.6);
+        ok({ data: out, thumb: draw(220).toDataURL('image/jpeg', 0.7) });
+      };
+      im.src = url;
+    });
+  }
+  var QUEUE = [], SENDING = false;
+  function queuePhoto(it, p) { p.state = 'sending'; QUEUE.push([it.id, p.id]); pump(); }
+  function pump() {
+    if (SENDING || !QUEUE.length) return;
+    SENDING = true;
+    var job = QUEUE.shift(), it = itemById(job[0]), p = it && it.photos.filter(function (x) { return x.id === job[1]; })[0];
+    if (!p || !PHOTO[p.id]) { SENDING = false; return pump(); }
+    api('upload', { data: PHOTO[p.id] }, 120000).then(function (r) {
+      p.up = r.id; p.state = 'up'; delete PHOTO[p.id];
+    }, function (e) { p.state = 'failed'; p.err = errText(e); toast(errText(e), 5000); }).then(function () {
+      SENDING = false; saveDraft(); if (V.screen === 'add') redrawPhotos(it); if (V.screen === 'review') reviewShow(true); pump();
+    });
+  }
+  function addPhotos(it, files) {
+    var room = B.lists.maxFiles - it.photos.length;
+    Array.prototype.slice.call(files, 0, Math.max(room, 0)).reduce(function (chain, file) {
+      return chain.then(function () {
+        var p = { id: uid(), up: '', thumb: '', state: 'sending' };
+        var isPdf = file.type === 'application/pdf' || /\.pdf$/i.test(file.name || '');
+        if (isPdf) {
+          if (file.size > 10 * 1024 * 1024) { toast('That PDF is over 10 MB. Take a photo of the receipt instead.', 5000); return; }
+          return readFile(file).then(function (d) { PHOTO[p.id] = d.replace(/^data:[^;]*;/, 'data:application/pdf;'); it.photos.push(p); redrawPhotos(it); queuePhoto(it, p); });
+        }
+        return shrink(file).then(function (r) { PHOTO[p.id] = r.data; p.thumb = r.thumb; it.photos.push(p); redrawPhotos(it); queuePhoto(it, p); });
+      }).catch(function (e) { toast(errText(e), 5000); });
+    }, Promise.resolve()).then(function () { saveDraft(); });
+    if (files.length > room) toast('Up to ' + B.lists.maxFiles + ' photos for one expense.');
+  }
+
+  function problems(it) {
+    var E = {}, amt = parseFloat(String(it.amount).replace(/\s/g, '').replace(',', '.'));
+    if (!it.date) E.date = 'Add the date on the receipt.'; else if (it.date > today()) E.date = 'That date is in the future.';
+    if (!(amt > 0)) E.amount = 'Add the amount.';
+    if (!it.currency) E.currency = 'Choose the currency.';
+    if (!String(it.shop).trim()) E.shop = 'Say which shop or supplier.';
+    if (!String(it.what).trim()) E.what = 'Say what was bought.';
+    if (!it.category) E.category = 'Choose a category, or Not sure.';
+    if (!it.paid) E.paid = 'Say how it was paid.';
+    if (/^Other/.test(it.currency) && !String(it.notes).trim()) E.notes = 'Say which currency here.';
+    if (!(it.replaces && it.keep)) {
+      if (!it.photos.length) E.photos = 'Add a photo of the receipt.';
+      else if (it.photos.some(function (p) { return p.state === 'lost'; })) E.photos = 'A photo was lost when the page closed. Remove it and add it again.';
+    }
+    return E;
+  }
+  function check() {
+    var d = draft(), errs = {}, firstBad = null;
+    d.items.forEach(function (it) { var E = problems(it); if (Object.keys(E).length) { errs[it.id] = E; if (!firstBad) firstBad = it.id + ':' + Object.keys(E)[0]; } });
+    V.errors = errs;
+    if (firstBad) {
+      addShow(true);
+      var p = firstBad.split(':'), el = document.querySelector('#it-' + p[0] + ' [data-for="' + p[1] + '"]');
+      if (el) el.scrollIntoView({ behavior: 'smooth', block: 'center' });
+      return toast('Some answers are missing. They are marked in red.');
+    }
+    store('last-' + B.me.ref, { paid: d.items[d.items.length - 1].paid, currency: d.items[d.items.length - 1].currency });
+    if (!d.nonce) { d.nonce = uid() + uid(); saveDraft(); }
+    V.screen = 'review'; reviewShow();
+  }
+  function reviewShow(keepScroll) {
+    var d = draft(), pending = 0, failed = 0, totals = {};
+    d.items.forEach(function (it) {
+      it.photos.forEach(function (p) { if (!(it.replaces && it.keep)) { if (p.state === 'sending') pending++; if (p.state === 'failed') failed++; } });
+      var a = parseFloat(String(it.amount).replace(/\s/g, '').replace(',', '.')); totals[it.currency] = (totals[it.currency] || 0) + a;
+    });
+    var html = head('Check and send', d.items.length + ' expense' + (d.items.length > 1 ? 's' : '') + ' for the Captain') + '<div class="wrap">' +
+      testNote('These will be sent as tests.') + '<div class="ex">' + d.items.map(function (it) {
+        var a = parseFloat(String(it.amount).replace(/\s/g, '').replace(',', '.'));
+        var th = it.replaces && it.keep ? '<span class="small">Same receipt as ' + esc(it.replaces) + '</span>' : it.photos.map(function (p) { return p.thumb ? '<img src="' + p.thumb + '" alt="">' : '<span>PDF</span>'; }).join('');
+        return '<div class="rv"><div><b>' + esc(it.shop) + '</b><br><span class="small">' + esc(day(it.date) + ' \u00b7 ' + it.what) + '</span><br><span class="small">' +
+          esc(it.category + ' \u00b7 ' + short(it.paid)) + '</span>' + (it.replaces ? '<br><span class="pill warn">Corrects ' + esc(it.replaces) + '</span>' : '') +
+          '<div class="thumbs">' + th + '</div></div><span class="amt">' + esc(money(a, /^Other/.test(it.currency) ? '' : it.currency)) + '</span></div>';
+      }).join('') + '</div>' +
+      '<p class="small">Total: ' + esc(Object.keys(totals).map(function (c) { return money(totals[c], /^Other/.test(c) ? '' : c); }).join(' + ')) + '</p>' +
+      (pending ? '<div class="note"><p>' + pending + ' photo' + (pending > 1 ? 's are' : ' is') + ' still being sent. Send works as soon as ' + (pending > 1 ? 'they arrive' : 'it arrives') + '.</p></div>' : '') +
+      (failed ? '<div class="note bad"><p>A photo did not send. Go back and tap Try again on it.</p></div>' : '') +
+      '<div class="btns"><button class="btn primary wide" data-act="send"' + (pending || failed ? ' disabled' : '') + '>Send to the Captain</button></div>' +
+      '<div class="btns" style="justify-content:center;margin-bottom:40px"><button class="linkbtn" data-act="edit">Back to change something</button></div></div>';
+    paint(html, keepScroll);
+  }
+  function send() {
+    var d = draft();
+    var payload = d.items.map(function (it) {
+      return { date: it.date, shop: it.shop, what: it.what, category: it.category, paid: it.paid, amount: it.amount, currency: it.currency, notes: it.notes,
+        files: it.replaces && it.keep ? [] : it.photos.map(function (p) { return p.up; }), replaces: it.replaces || '', keepReceipts: !!(it.replaces && it.keep) };
+    });
+    var b = busy('Sending to the Captain', 'This takes about half a minute, longer for a lot of receipts. Keep this page open.');
+    api('submit', { nonce: d.nonce, expenses: payload }, 330000).then(function (r) {
+      b.done(); D = { items: [] }; drop(draftKey()); B.expenses = r.expenses; V = { screen: 'sent', sent: r }; sentShow();
+    }, function (e) {
+      b.done();
+      var t = errText(e);
+      toast(/connection/i.test(t) ? 'No connection. Your expenses are saved on this phone; press Send again when you have signal.' : t, 7000);
+    });
+  }
+  function sentShow() {
+    var r = V.sent, n = r.refs.length;
+    paint(head('Sent', esc(r.sub) + ' \u00b7 ' + n + ' expense' + (n > 1 ? 's' : '')) + '<div class="wrap">' +
+      '<div class="note ok"><p><b>The Captain has your ' + (n > 1 ? n + ' expenses' : 'expense') + '.</b> ' + (r.test ? 'As a test, the email went to the Mate only. ' : '') +
+      'This page shows when each one is approved, sent back or denied. Hand the paper receipts to the Purser.</p></div>' +
+      '<p class="small">Numbers: ' + esc(r.refs.join(', ')) + '</p>' +
+      '<div class="btns"><button class="btn primary wide" data-act="home">Back to my expenses</button></div></div>');
+  }
+  function correct(ref) {
+    var l = B.expenses.filter(function (x) { return x.ref === ref; })[0], d = draft();
+    if (!l) return;
+    if (d.items.some(function (it) { return it.replaces === ref; })) { V.screen = 'add'; return addShow(); }
+    var blank = d.items.length === 1 && !d.items[0].shop && !d.items[0].what && !d.items[0].photos.length && !d.items[0].replaces;
+    if (blank) d.items = [];
+    if (d.items.length >= B.lists.maxExpenses) return toast('Send the expenses you have started first (' + B.lists.maxExpenses + ' at most).', 5000);
+    var L = B.lists, cur = l.currency || (L.currencies.filter(function (c) { return /^Other/.test(c); })[0] || '');
+    d.items.push({ id: uid(), date: l.dateIso || today(), shop: l.shop, what: l.what, category: L.categories.indexOf(l.choice) >= 0 ? l.choice : '',
+      paid: L.paidWith.indexOf(l.paid) >= 0 ? l.paid : '', amount: l.amount == null ? '' : String(l.amount), currency: L.currencies.indexOf(cur) >= 0 ? cur : 'EUR',
+      notes: l.note || '', photos: [], replaces: ref, keep: l.receipts > 0, keepN: l.receipts, reason: l.reason || '' });
+    d.nonce = ''; saveDraft(); V.screen = 'add'; V.errors = null; addShow();
+    setTimeout(function () { var el = $('it-' + d.items[d.items.length - 1].id); if (el) el.scrollIntoView({ behavior: 'smooth', block: 'start' }); }, 50);
+  }
+
+  /* ---------------------------------------------------------------- receipts on the page */
+  var RC = {};
+  function receiptInto(box, ref, i, big) {
+    var k = ref + ':' + (i || 0);
+    var put = function (src) { box.innerHTML = '<img src="' + src + '" alt="Receipt for ' + esc(ref) + '" data-act="zoom" data-k="' + esc(k) + '">'; };
+    if (RC[k]) return Promise.resolve(put(RC[k]));
+    box.innerHTML = '<span class="wait">Loading the receipt</span>';
+    return api('receipt', { ref: ref, i: i || 0 }, 60000).then(function (r) { RC[k] = r.data; put(r.data); }, function (e) { box.innerHTML = '<span class="wait">' + esc(errText(e)) + '</span>'; });
+  }
+  function zoom(k) {
+    var v = document.createElement('div'); v.className = 'viewer';
+    v.innerHTML = '<button class="close" data-act="unzoom">Close</button><img src="' + RC[k] + '" alt="Receipt">';
+    v.addEventListener('click', function (e) { if (e.target === v || e.target.getAttribute('data-act') === 'unzoom') v.remove(); });
+    document.body.appendChild(v);
+  }
+
+  /* ---------------------------------------------------------------- Captain */
+  var DEC = {};   // ref -> { d: 'approve' | 'back' | 'deny' | 'later', why }
+  var MONTHS = ['January', 'February', 'March', 'April', 'May', 'June', 'July', 'August', 'September', 'October', 'November', 'December'];
+  function captainShow(keepScroll) {
+    var c = B.captain, n = 0, tab = V.tab === 'decided' ? 'decided' : 'waiting';
+    c.groups.forEach(function (g) { n += g.lines.length; });
+    var sub = tab === 'decided' ? 'Everything you have approved, sent back or denied' :
+      n ? n + ' expense' + (n > 1 ? 's' : '') + ' waiting, from ' + c.groups.length + ' crew member' + (c.groups.length > 1 ? 's' : '') : 'Nothing waiting';
+    var html = head('Approvals', esc(sub), refreshBtn()) + '<div class="wrap">' + homeHint() +
+      testNote('This page shows test expenses only. The emails about your decisions go to the Mate.') +
+      '<div class="tabs" role="tablist">' + [['waiting', 'Waiting (' + n + ')'], ['decided', 'Decided']].map(function (t) {
+        return '<button role="tab" data-act="tab" data-tab="' + t[0] + '" aria-selected="' + (tab === t[0]) + '">' + t[1] + '</button>'; }).join('') + '</div>' + (V.notice || '');
+    if (tab === 'decided') return paint(html + decidedHtml(c.decided) + '</div>', keepScroll);
+    if (!n) html += '<p>Nothing is waiting for you. <span class="small">As at ' + esc(B.asAt) + '.</span></p>';
+    html += c.groups.map(function (g, i) {
+      var info = [g.position, g.lines.length + ' receipt' + (g.lines.length > 1 ? 's' : ''), g.noRate < g.lines.length ? 'total ' + eur(g.total) : '',
+        g.back ? 'pay back ' + eur(g.back) : '', g.noRate ? g.noRate + ' not yet in EUR' : ''].filter(Boolean).join(' \u00b7 ');
+      return '<section><div class="phead"><div><h3 class="who">' + esc(g.name) + '</h3><p class="small" style="margin:2px 0 0">' + esc(info) + '</p></div>' +
+        '<button class="btn ghost small" data-act="approveperson" data-i="' + i + '">Approve all for ' + esc(first(g.name)) + '</button></div>' + g.lines.map(capCard).join('') + '</section>';
+    }).join('');
+    if (c.groups.length > 1) html += '<div class="btns"><button class="btn ghost" data-act="approveall">Approve everything</button><span class="small">Nothing changes until you press Submit.</span></div>';
+    else if (n) html += '<p class="small">Nothing changes until you press Submit.</p>';
+    html += '</div>' + (n ? '<div class="dock"><div class="wrap"><button class="btn primary" id="submit" data-act="submit" disabled>Submit</button></div></div>' : '') + '<div style="height:30px"></div>';
+    paint(html, keepScroll);
+    dockCount();
+    loadReceipts();
+  }
+  function monthName(ym) { var m = /^(\d{4})-(\d{2})$/.exec(ym || ''); return m ? MONTHS[+m[2] - 1] + ' ' + m[1] : 'Date not recorded'; }
+  function decidedHtml(list) {
+    if (!list.length) return '<p class="muted">Nothing decided yet.</p>';
+    var by = {}, order = [];
+    list.forEach(function (l) { var k = l.month || ''; if (!by[k]) { by[k] = []; order.push(k); } by[k].push(l); });
+    var is = function (s) { return function (l) { return l.status === s; }; };
+    return order.map(function (k) {
+      var ls = by[k], a = ls.filter(is('Approved')), b = ls.filter(is('Sent back')), d = ls.filter(is('Denied'));
+      var bits = [a.length + ' approved, ' + eur(a.reduce(function (s, l) { return s + (l.eur || 0); }, 0))];
+      if (b.length) bits.push(b.length + ' sent back');
+      if (d.length) bits.push(d.length + ' denied');
+      return '<div class="month"><h3>' + esc(monthName(k)) + '</h3><span class="small">' + esc(bits.join(' \u00b7 ')) + '</span></div>' + ls.map(function (l) {
+        return '<div class="rrow"><div><b>' + esc(l.name) + '</b> \u00b7 ' + esc(l.shop) + '<br><span class="small">' + esc([l.ref, l.what, l.decided].filter(Boolean).join(' \u00b7 ')) + '</span><br>' +
+          statusPill(l) + (l.reason ? '<div class="small">Reason: ' + esc(l.reason) + '</div>' : '') + '</div>' + amountBox(l) + '</div>';
+      }).join('');
+    }).join('') + '<div style="height:40px"></div>';
+  }
+  function whyHint(d) { return d === 'deny' ? 'Why not (the crew sees this)' : 'What to fix (the crew sees this)'; }
+  function capCard(l) {
+    var d = DEC[l.ref] || { d: 'later', why: '' }, need = d.d === 'back' || d.d === 'deny';
+    var b = function (v, label) { return '<button type="button" data-act="dec" data-ref="' + esc(l.ref) + '" data-d="' + v + '" aria-pressed="' + (d.d === v) + '">' + label + '</button>'; };
+    return '<article class="ex cap ' + d.d + (l.test ? ' test' : '') + '" id="c-' + esc(l.ref) + '"><div class="exh"><b>' + esc(l.shop) + '</b>' + amountBox(l) + '</div>' +
+      '<p class="what">' + esc(l.what) + '</p><p class="meta">' + esc([l.date, short(l.paid), (l.code ? l.code + ' ' : '') + l.category, l.ref].filter(Boolean).join(' \u00b7 ')) + '</p>' +
+      (l.flags && l.flags.length ? '<p class="flags">' + l.flags.map(function (f) { return '<span class="pill warn">' + esc(f) + '</span>'; }).join('') + '</p>' : '') +
+      (l.note ? '<p class="small" style="margin:-4px 0 8px">Note: ' + esc(l.note) + '</p>' : '') +
+      (l.replaces ? '<p><span class="pill">Corrects ' + esc(l.replaces) + '</span></p>' : '') +
+      (l.receipts ? '<div class="rimg" data-ref="' + esc(l.ref) + '"></div>' + (l.receipts > 1 ? '<div class="acts">' + Array.apply(null, Array(l.receipts)).map(function (x, i) {
+        return '<button class="linkbtn" data-act="page" data-ref="' + esc(l.ref) + '" data-i="' + i + '">Page ' + (i + 1) + '</button>'; }).join('') + '</div>' : '') : '') +
+      '<div class="seg" role="group" aria-label="Decision for ' + esc(l.ref) + '">' + b('approve', 'Approve') + b('back', 'Send back') + b('deny', 'Deny') + b('later', 'Later') + '</div>' +
+      '<div class="fld' + (need ? '' : ' hidden') + '"><input type="text" class="inp" data-why="' + esc(l.ref) + '" value="' + esc(d.why) + '" placeholder="' + esc(whyHint(d.d)) + '"></div></article>';
+  }
+  function setDec(ref, d) {
+    DEC[ref] = { d: d, why: (DEC[ref] && DEC[ref].why) || '' };
+    var card = $('c-' + ref); if (!card) return;
+    card.className = card.className.replace(/\b(approve|back|deny|later)\b/, d);
+    each('.seg button', function (x) { x.setAttribute('aria-pressed', String(x.getAttribute('data-d') === d)); }, card);
+    var f = card.querySelector('.fld'), inp = f.querySelector('input'), need = d === 'back' || d === 'deny';
+    f.classList.toggle('hidden', !need); f.classList.remove('bad'); inp.placeholder = whyHint(d);
+    if (need && !inp.value) inp.focus();
+    dockCount();
+  }
+  function approveLines(lines) {   // keeps what he has already marked Send back or Deny
+    var kept = 0;
+    lines.forEach(function (l) { var d = DEC[l.ref]; if (d && (d.d === 'back' || d.d === 'deny')) kept++; else setDec(l.ref, 'approve'); });
+    if (kept) toast(kept + ' left as Send back or Deny');
+  }
+  function dockCount() {
+    var n = { approve: 0, back: 0, deny: 0 };
+    B.captain.groups.forEach(function (g) { g.lines.forEach(function (l) { var d = DEC[l.ref]; if (d && n[d.d] != null) n[d.d]++; }); });
+    var s = $('submit'); if (!s) return;
+    var bits = [n.approve ? n.approve + ' approved' : '', n.back ? n.back + ' sent back' : '', n.deny ? n.deny + ' denied' : ''].filter(Boolean);
+    s.disabled = !bits.length;
+    s.textContent = bits.length ? 'Submit: ' + bits.join(', ') : 'Submit';
+  }
+  function loadReceipts() {
+    var boxes = Array.prototype.slice.call(document.querySelectorAll('.rimg[data-ref]'));
+    boxes.reduce(function (p, box) { return p.then(function () { if (!box.isConnected || box.querySelector('img')) return; return receiptInto(box, box.getAttribute('data-ref'), 0); }); }, Promise.resolve());
+  }
+  function submitDecisions() {
+    var out = [], missing = '';
+    B.captain.groups.forEach(function (g) { g.lines.forEach(function (l) {
+      var d = DEC[l.ref];
+      if (!d || d.d === 'later') return;
+      if (d.d !== 'approve' && !String(d.why || '').trim() && !missing) missing = l.ref;
+      out.push({ ref: l.ref, d: d.d, why: d.why || '' });
+    }); });
+    if (!out.length) return;
+    if (missing) {
+      var card = $('c-' + missing), f = card && card.querySelector('.fld');
+      if (f) { f.classList.add('bad'); card.scrollIntoView({ behavior: 'smooth', block: 'center' }); f.querySelector('input').focus(); }
+      return toast('Say why ' + missing + ' is ' + (DEC[missing].d === 'deny' ? 'denied' : 'sent back') + '. The crew member sees it.', 5000);
+    }
+    var b = busy('Sending your decisions', out.some(function (x) { return x.d === 'approve'; }) ? 'Making the Purser\'s claim takes about 20 seconds for each crew member.' : '');
+    api('review', { decisions: out }, 330000).then(function (r) {
+      b.done(); DEC = {}; B.captain = r.captain;
+      var did = [r.approved.length ? r.approved.length + ' approved' : '', r.back.length ? r.back.length + ' sent back' : '', r.denied.length ? r.denied.length + ' denied' : ''].filter(Boolean);
+      var msg = did.length ? '<p><b>Done: ' + did.join(', ') + '.</b></p>' : '<p>Nothing changed: those expenses had already been decided.</p>';
+      if (r.claims.length) msg += '<p>' + (B.test ? 'As a test, these claims went to the Mate: ' : 'Sent to the Purser: ') +
+        esc(r.claims.map(function (c) { return c.claim + ' ' + c.name + ' (' + eur(c.total) + ')'; }).join(', ')) + '.</p>';
+      var unsent = r.claims.filter(function (c) { return c.emailError; });
+      if (unsent.length) msg += '<p><b>The email for ' + esc(unsent.map(function (c) { return c.claim; }).join(', ')) + ' did not go.</b> The claim is on the Purser\'s page.</p>';
+      if (r.problems.length) msg += '<p>Approved, but kept off a claim until fixed on the sheet: ' + esc(r.problems.join('; ')) + '. The Purser sees them on her page.</p>';
+      if (r.claimError) msg += '<p><b>Approved, but the claim was not made just now:</b> ' + esc(r.claimError) + ' The Purser can make it from her page.</p>';
+      V.notice = '<div class="note ' + (unsent.length || r.claimError ? 'bad' : 'ok') + '"><button class="x" data-act="clearnotice" aria-label="Hide">&times;</button>' + msg + '</div>';
+      captainShow();
+    }, function (e) { b.done(); toast(errText(e), 7000); });
+  }
+
+  /* ---------------------------------------------------------------- Purser (and the Mate's Claims tab) */
+  function purserPanel(p, admin) {
+    var now = new Date(), ym = now.getFullYear() + '-' + ('0' + (now.getMonth() + 1)).slice(-2);
+    var month = p.claims.filter(function (c) { return c.month === ym; }), tot = 0, back = 0;
+    month.forEach(function (c) { tot += c.total || 0; back += c.back || 0; });
+    var html = '<div class="tiles"><div class="tile"><span class="k">Claims this month</span><div class="v">' + month.length + '</div><span class="s">' + esc(eur(tot)) + '</span></div>' +
+      '<div class="tile"><span class="k">To pay back</span><div class="v">' + esc(eur(back)) + '</div><span class="s">this month, own money</span></div>' +
+      '<div class="tile"><span class="k">With the Captain</span><div class="v">' + p.waiting + '</div><span class="s">not decided yet</span></div></div>' + (V.claimNotice || '');
+    html += '<h2 class="sec">Claims</h2><p class="small" style="margin:-4px 0 10px">A claim is made for each crew member when the Captain approves, and emailed to ' +
+      (admin ? 'the Purser' : 'you') + ' with the PDF.</p>';
+    if (!p.claims.length) html += '<p class="muted">No claims yet.</p>';
+    else html += '<div class="tblw"><table class="tbl"><thead><tr><th>Claim</th><th>Name</th><th>Made</th><th class="r">Lines</th><th class="r">Total</th><th class="r">Pay back</th><th></th></tr></thead><tbody>' +
+      p.claims.map(function (c) {
+        return '<tr><td><b>' + esc(c.claim) + '</b></td><td>' + esc(c.name) + '</td><td>' + esc(c.made) + '</td><td class="r">' + esc(c.lines) + '</td><td class="r">' + esc(eur(c.total)) +
+          '</td><td class="r">' + esc(eur(c.back)) + '</td><td><button class="linkbtn" data-act="pdf" data-claim="' + esc(c.claim) + '">Download PDF</button>' +
+          (admin && c.folder ? ' &nbsp;<a class="linkbtn" target="_blank" rel="noopener" href="https://drive.google.com/drive/folders/' + esc(c.folder) + '">Folder</a>' : '') + '</td></tr>';
+      }).join('') + '</tbody></table></div>';
+    if (!p.groups.length && !p.problems.length) return html + '<div style="height:40px"></div>';
+    html += '<h2 class="sec">Approved, not on a claim yet</h2><p class="small" style="margin:-4px 0 10px">Usually empty. Lines land here when they were approved on the sheet or from an old email link, ' +
+      'when something needs fixing on the sheet first, or when the claim could not be made at the time.</p>';
+    html += p.groups.map(function (g) {
+      return '<h3 class="who">' + esc(g.name) + '</h3><p class="small" style="margin:0 0 8px">' + esc(g.position + ' \u00b7 ' + g.lines.length + ' expense' + (g.lines.length > 1 ? 's' : '') + ' \u00b7 total ' + eur(g.total) + ' \u00b7 pay back ' + eur(g.back)) + '</p>' +
+        '<div class="tblw"><table class="tbl"><thead><tr><th>Ref</th><th>Date</th><th>Shop and what</th><th>Code</th><th>Paid with</th><th class="r">Amount</th><th class="r">EUR</th></tr></thead><tbody>' +
+        g.lines.map(function (l) {
+          return '<tr><td>' + esc(l.ref) + (l.test ? ' <span class="pill test">TEST</span>' : '') + '</td><td>' + esc(l.date) + '</td><td>' + esc(l.shop) + '<br><span class="small">' + esc(l.what) + '</span></td><td>' + esc(l.code) +
+            '</td><td>' + esc(short(l.paid)) + '</td><td class="r">' + esc(money(l.amount, l.currency)) + '</td><td class="r">' + esc(eur(l.eur)) + '</td></tr>';
+        }).join('') + '</tbody></table></div>';
+    }).join('');
+    if (p.problems.length) html += '<div class="note bad"><p><b>Approved but left out until fixed on the Expenses tab:</b></p>' + p.problems.map(function (x) { return '<p>' + esc(x) + '</p>'; }).join('') + '</div>';
+    if (p.groups.length) html += '<div class="btns"><button class="btn primary" data-act="claims">Make claims (' + p.groups.length + ' ' + (p.groups.length > 1 ? 'people' : 'person') + ')</button>' +
+      '<span class="small">One claim per person, emailed with its PDF like the others.</span></div>';
+    return html + '<div style="height:40px"></div>';
+  }
+  function makeClaims() {
+    var p = B.purser, refs = [];
+    p.groups.forEach(function (g) { g.lines.forEach(function (l) { refs.push(l.ref); }); });
+    var sum = p.groups.map(function (g) { return g.name + ': ' + g.lines.length + ' line(s), ' + eur(g.total); }).join('\n');
+    if (!confirm('Make these claims now?\n\n' + sum)) return;
+    var b = busy('Making the claims', 'About 20 seconds per person. Keep this page open.');
+    api('makeClaims', { refs: refs }, 360000).then(function (r) {
+      b.done(); B.purser = r.purser;
+      V.claimNotice = '<div class="note ok"><p><b>Claims made and emailed:</b> ' + esc(r.made.map(function (m) { return m.claim + ' ' + m.name; }).join(', ')) + '.</p></div>';
+      show(true);
+    }, function (e) { b.done(); toast(errText(e), 7000); });
+  }
+  function downloadPdf(claim) {
+    var b = busy('Getting the PDF');
+    api('claimPdf', { claim: claim }, 120000).then(function (r) {
+      b.done();
+      var bin = atob(r.data), bytes = new Uint8Array(bin.length);
+      for (var i = 0; i < bin.length; i++) bytes[i] = bin.charCodeAt(i);
+      var url = URL.createObjectURL(new Blob([bytes], { type: 'application/pdf' })), a = document.createElement('a');
+      a.href = url; a.download = r.name; document.body.appendChild(a); a.click(); a.remove();
+      setTimeout(function () { URL.revokeObjectURL(url); }, 60000);
+    }, function (e) { b.done(); toast(errText(e), 6000); });
+  }
+
+  /* ---------------------------------------------------------------- the Mate */
+  function adminShow(keepScroll) {
+    var a = B.admin, tab = V.tab || 'crew';
+    var tabs = [['crew', 'Crew and links'], ['claims', 'Claims'], ['settings', 'Settings']];
+    var html = head('Expenses admin', 'Mate \u00b7 as at ' + esc(B.asAt), refreshBtn()) + '<div class="wrap">' +
+      testNote('Expenses sent from the website are tests. The Captain and Purser pages show test expenses only.') +
+      '<div class="tabs" role="tablist">' + tabs.map(function (t) { return '<button role="tab" data-act="tab" data-tab="' + t[0] + '" aria-selected="' + (tab === t[0]) + '">' + t[1] + '</button>'; }).join('') + '</div>';
+    if (tab === 'crew') html += crewAdmin(a);
+    else if (tab === 'claims') html += purserPanel(B.purser, true);
+    else html += settingsAdmin(a);
+    paint(html + '</div>', keepScroll);
+  }
+  function linkBox(id, link, who) {
+    return '<div class="linkbox hidden" id="lb-' + id + '"><p class="linktext">' + esc(link) + '</p><div class="btns" style="margin:0">' +
+      '<button class="btn ghost small" data-act="copy" data-link="' + esc(link) + '">Copy link</button>' +
+      '<a class="btn ghost small" target="_blank" rel="noopener" href="https://wa.me/?text=' + encodeURIComponent(shareText(who, link)) + '">WhatsApp</a></div>' +
+      '<div class="qr" data-qr="' + esc(link) + '"></div><p class="small">Scan with the phone camera to open it there.</p></div>';
+  }
+  function shareText(who, link) {
+    return 'Your SABAI crew expenses link' + (who ? ', ' + first(who) : '') + ': ' + link + '\nOpen it on your phone and add it to your Home Screen. It is your own login, so keep it to yourself.';
+  }
+  function crewAdmin(a) {
+    var html = '<h2 class="sec">Add a crew member</h2><div class="addcrew"><div class="fld"><label for="nc-name">Name</label><input type="text" id="nc-name" autocomplete="off" placeholder="As on the Google Form"></div>' +
+      '<div class="fld"><label for="nc-pos">Position</label><select id="nc-pos">' + opt('', 'Choose', '') + a.positions.map(function (p) { return opt(p, p, ''); }).join('') + '</select></div>' +
+      '<button class="btn primary" data-act="addcrew">Add</button></div>';
+    html += '<h2 class="sec">Crew (' + a.crew.filter(function (c) { return c.active; }).length + ' with a working link)</h2>';
+    if (!a.crew.length) html += '<p class="muted">Nobody yet. Add each crew member, then send them their link.</p>';
+    html += a.crew.map(function (c) {
+      return '<div class="crow' + (c.active ? '' : ' off') + '"><div class="cl"><div><b>' + esc(c.name) + '</b> <span class="small">' + esc(c.ref + ' \u00b7 added ' + c.added) + '</span></div>' +
+        '<button class="btn ghost small" data-act="showlink" data-id="' + esc(c.ref) + '"' + (c.active ? '' : ' disabled') + '>Link and QR</button></div>' +
+        '<div class="ctl"><select class="inp sel" data-crew="' + esc(c.ref) + '" data-set="position" aria-label="Position of ' + esc(c.name) + '">' +
+        (a.positions.indexOf(c.position) < 0 ? opt(c.position, c.position, c.position) : '') + a.positions.map(function (p) { return opt(p, p, c.position); }).join('') + '</select>' +
+        '<label class="sw"><input type="checkbox" data-crew="' + esc(c.ref) + '" data-set="active"' + (c.active ? ' checked' : '') + '> Link works</label>' +
+        '<button class="linkbtn" data-act="newkey" data-id="' + esc(c.ref) + '" data-name="' + esc(c.name) + '">New link</button></div>' +
+        linkBox(c.ref, c.link, c.name) + '</div>';
+    }).join('');
+    html += '<h2 class="sec">Links for the Captain, the Purser and you</h2>' + [['cap', 'Captain', a.links.captain, 'Approvals for every expense'], ['pur', 'Purser', a.links.purser, 'Claims and their PDFs'], ['adm', 'Mate (this page)', a.links.admin, 'Crew, links and settings']].map(function (x) {
+      return '<div class="crow"><div class="cl"><div><b>' + x[1] + '</b> <span class="small">' + x[3] + '</span></div><button class="btn ghost small" data-act="showlink" data-id="' + x[0] + '">Link and QR</button></div>' + linkBox(x[0], x[2], '') + '</div>';
+    }).join('') + '<p class="small" style="margin-bottom:40px">To change the Captain\'s or the Purser\'s link, change their key on the Settings tab of the sheet. The old link then stops working.</p>';
+    return html;
+  }
+  function settingsAdmin(a) {
+    return '<h2 class="sec">Settings</h2>' +
+      '<div class="setrow"><div><b>Test mode</b><p>While on, expenses sent from the website are marked TEST, kept off real claims, and every email about them goes only to mate@. The Captain and Purser pages show only test expenses.</p></div>' +
+      '<label class="sw"><input type="checkbox" data-setting="Test mode"' + (a.test ? ' checked' : '') + '> On</label></div>' +
+      '<div class="setrow"><div><b>Captain emails open this website</b><p>When on, the button in the Captain\'s email opens his page here instead of the script page.</p></div>' +
+      '<label class="sw"><input type="checkbox" data-setting="Captain emails open the new page"' + (a.captainEmails ? ' checked' : '') + '> On</label></div>' +
+      '<div class="setrow"><div><b>Test expenses on the sheet: ' + a.tests + '</b><p>Removes every test expense from the Expenses tab, with its photos (to the Drive bin) and any test claims. Real expenses are not touched.</p></div>' +
+      '<button class="btn danger small" data-act="cleartests"' + (a.tests ? '' : ' disabled') + '>Remove</button></div>' +
+      '<h2 class="sec">Elsewhere</h2><p><a href="' + esc(a.sheet) + '" target="_blank" rel="noopener">The expenses sheet</a>' + (a.form ? ' &nbsp;\u00b7&nbsp; <a href="' + esc(a.form) + '" target="_blank" rel="noopener">The Google Form</a>' : '') + '</p><div style="height:40px"></div>';
+  }
+  function adminCall(fn, a, done, waitText) {
+    var b = waitText ? busy(waitText) : null;
+    return api(fn, a).then(function (r) { if (b) b.done(); if (r.admin) B.admin = r.admin; if (r.purser) B.purser = r.purser; if (r.admin && 'test' in r.admin) B.test = r.admin.test; adminShow(true); if (done) done(r); },
+      function (e) { if (b) b.done(); toast(errText(e), 6000); adminShow(true); });
+  }
+
+  /* ---------------------------------------------------------------- events */
+  app.addEventListener('click', function (e) {
+    var t = e.target.closest('[data-act]'); if (!t) return;
+    var act = t.getAttribute('data-act'), ref = t.getAttribute('data-ref'), item = t.getAttribute('data-item');
+    if (act === 'retry') return start();
+    if (act === 'refresh') { t.disabled = true; t.textContent = 'Refreshing'; RC = {}; return reload(function () { toast('Up to date'); }); }
+    if (act === 'hintoff') { store('hint-off', 1); t.closest('.note').remove(); return; }
+    if (act === 'clearnotice') { V.notice = ''; t.closest('.note').remove(); return; }
+    if (act === 'zoom') return zoom(t.getAttribute('data-k'));
+    // crew
+    if (act === 'add') { V.screen = 'add'; V.errors = null; return addShow(); }
+    if (act === 'home') { V.screen = 'home'; return crewShow(); }
+    if (act === 'more') { draft().items.push(blankItem()); saveDraft(); addShow(true); var last = draft().items[draft().items.length - 1]; var el = $('it-' + last.id); if (el) el.scrollIntoView({ behavior: 'smooth', block: 'start' }); return; }
+    if (act === 'remove') {
+      var it = itemById(item);
+      if ((it.shop || it.what || it.photos.length) && !confirm('Remove this expense from the list? It has not been sent.')) return;
+      draft().items = draft().items.filter(function (x) { return x.id !== item; }); D.nonce = ''; saveDraft(); return addShow(true);
+    }
+    if (act === 'rmph') { var it2 = itemById(item); it2.photos = it2.photos.filter(function (p) { return p.id !== t.getAttribute('data-ph'); }); delete PHOTO[t.getAttribute('data-ph')]; D.nonce = ''; saveDraft(); return redrawPhotos(it2); }
+    if (act === 'retryph') { var it3 = itemById(item), p = it3.photos.filter(function (x) { return x.id === t.getAttribute('data-ph'); })[0]; if (p) { queuePhoto(it3, p); redrawPhotos(it3); } return; }
+    if (act === 'check') return check();
+    if (act === 'edit') { V.screen = 'add'; return addShow(); }
+    if (act === 'send') { t.disabled = true; return send(); }
+    if (act === 'correct') return correct(ref);
+    if (act === 'withdraw') {
+      if (!confirm('Withdraw ' + ref + '? The Captain will not see it any more. You can send it again later.')) return;
+      return api('withdraw', { ref: ref }).then(function (r) { B.expenses = r.expenses; crewShow(true); toast(ref + ' withdrawn'); }, function (e) { toast(errText(e), 6000); });
+    }
+    if (act === 'receipt') { var box = $('r-' + ref); if (box.querySelector('img')) { box.innerHTML = ''; return; } return receiptInto(box, ref, 0); }
+    // Captain
+    if (act === 'dec') return setDec(ref, t.getAttribute('data-d'));
+    if (act === 'approveall') return approveLines([].concat.apply([], B.captain.groups.map(function (g) { return g.lines; })));
+    if (act === 'approveperson') { var grp = B.captain.groups[+t.getAttribute('data-i')]; return grp && approveLines(grp.lines); }
+    if (act === 'submit') return submitDecisions();
+    if (act === 'page') return receiptInto(t.closest('.ex').querySelector('.rimg'), ref, +t.getAttribute('data-i'));
+    // Purser
+    if (act === 'claims') return makeClaims();
+    if (act === 'pdf') return downloadPdf(t.getAttribute('data-claim'));
+    // Mate
+    if (act === 'tab') { V.tab = t.getAttribute('data-tab'); if (B.role === 'admin') store('tab-admin', V.tab); return show(); }
+    if (act === 'showlink') { var lb = $('lb-' + t.getAttribute('data-id')); lb.classList.toggle('hidden'); var q = lb.querySelector('[data-qr]'); if (!lb.classList.contains('hidden') && !q.innerHTML) qrInto(q.getAttribute('data-qr'), q); return; }
+    if (act === 'copy') return copy(t.getAttribute('data-link'));
+    if (act === 'addcrew') {
+      var name = $('nc-name').value.trim(), pos = $('nc-pos').value;
+      if (!name) return toast('Type the name.'); if (!pos) return toast('Choose the position.');
+      return adminCall('addCrew', { name: name, position: pos }, function (r) { var lb2 = $('lb-' + r.ref); if (lb2) { lb2.classList.remove('hidden'); qrInto(lb2.querySelector('[data-qr]').getAttribute('data-qr'), lb2.querySelector('[data-qr]')); lb2.scrollIntoView({ block: 'center' }); } toast(name + ' added. Send them the link.', 4000); }, 'Adding ' + name);
+    }
+    if (act === 'newkey') {
+      if (!confirm('Make a new link for ' + t.getAttribute('data-name') + '? Their old link stops working at once, so send them the new one.')) return;
+      var id = t.getAttribute('data-id');
+      return adminCall('setCrew', { ref: id, newKey: true }, function () { var lb3 = $('lb-' + id); if (lb3) { lb3.classList.remove('hidden'); qrInto(lb3.querySelector('[data-qr]').getAttribute('data-qr'), lb3.querySelector('[data-qr]')); } toast('New link made'); });
+    }
+    if (act === 'cleartests') {
+      if (!confirm('Remove all ' + B.admin.tests + ' test expenses, their photos and any test claims? Real expenses are not touched.')) return;
+      return adminCall('removeTests', {}, function (r) { toast(r.lines + ' test expense(s) and ' + r.claims + ' test claim(s) removed', 5000); }, 'Removing the tests');
+    }
+  });
+
+  var saveTimer = 0;
+  function onField(e) {
+    var t = e.target;
+    if (t.hasAttribute('data-why')) { var r = t.getAttribute('data-why'); DEC[r] = DEC[r] || { d: 'back' }; DEC[r].why = t.value; return; }
+    var key = t.getAttribute('data-f'), it = key && itemById(t.getAttribute('data-item'));
+    if (!it) return;
+    if (key === 'keep') { it.keep = t.checked; redrawPhotos(it); }
+    else if (key === 'paid') { if (t.checked) it.paid = t.value; }
+    else it[key] = t.value;
+    D.nonce = '';
+    var fld = t.closest('.fld'); if (fld && fld.classList.contains('bad')) { fld.classList.remove('bad'); var er = fld.querySelector('.err'); if (er) er.remove(); if (V.errors && V.errors[it.id]) delete V.errors[it.id][fld.getAttribute('data-for')]; }
+    clearTimeout(saveTimer); saveTimer = setTimeout(saveDraft, 300);
+  }
+  app.addEventListener('input', onField);
+  app.addEventListener('change', function (e) {
+    var t = e.target;
+    if (t.hasAttribute('data-photo')) { var it = itemById(t.getAttribute('data-photo')); if (t.files && t.files.length) addPhotos(it, t.files); t.value = ''; return; }
+    if (t.hasAttribute('data-setting')) {
+      var name = t.getAttribute('data-setting'), on = t.checked;
+      var q = name === 'Test mode' ? (on ? 'Switch test mode on? Expenses sent from the website become tests and the Captain and Purser pages show only tests.' : 'Switch test mode off? Expenses sent from the website are then real: the Captain gets them and they go on claims.')
+        : (on ? 'Make the button in the Captain\'s emails open his page on this website?' : 'Make the Captain\'s email button open the script page again?');
+      if (!confirm(q)) { t.checked = !on; return; }
+      return adminCall('setSetting', { name: name, on: on }, function () { toast(name + (on ? ' on' : ' off')); });
+    }
+    if (t.hasAttribute('data-crew')) {
+      var a = { ref: t.getAttribute('data-crew') }, set = t.getAttribute('data-set');
+      if (set === 'active') { a.active = t.checked; if (!t.checked && !confirm('Switch this link off? It stops working at once. You can switch it on again.')) { t.checked = true; return; } }
+      else a.position = t.value;
+      return adminCall('setCrew', a, function () { toast('Saved'); });
+    }
+    onField(e);
+  });
+  window.addEventListener('beforeunload', function (e) { if (SENDING || QUEUE.length) { e.preventDefault(); e.returnValue = ''; } });
+
+  start();
+})();
+</script>
+</body>
+</html>
