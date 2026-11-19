@@ -100,6 +100,7 @@ p.meta{display:flex;flex-wrap:wrap;justify-content:space-between;gap:0 12px;marg
 .ref{font-variant-numeric:tabular-nums}
 .pills{display:flex;flex-wrap:wrap;gap:6px;margin-top:12px}
 .pills .pill{margin:0}
+.pills .pill.warn{white-space:normal;line-height:1.35;border-radius:14px}   /* the Captain's notes can be a sentence (19 Nov 2026) */
 
 /* buttons */
 .btn{display:inline-flex;align-items:center;justify-content:center;gap:8px;border:0;border-radius:999px;padding:14px 24px;min-height:52px;font:600 16.5px/1 var(--sans);text-decoration:none;transition:transform .1s,filter .2s}
@@ -524,13 +525,13 @@ var EXPENSES_API = 'https://script.google.com/macros/s/AKfycbxGKUUj0UKTkLPy3PWt6
     paint(head(WHO ? 'Who is sending?' : 'Crew expenses', WHO ? '' : 'Send an expense to the Captain with the receipt.') + '<div class="wrap">' + homeHint() +
       testNote('Expenses you send now are tests. They go only to the Mate and never onto a real claim.') +
       '<p class="lead">' + (WHO ? 'Change the name or email address used on this phone.' : 'First, who is sending?') +
-      ' Your report of what you send, and the Captain\'s decisions, go to this email address.</p>' +
+      ' Your report and the Captain\'s decisions are emailed to this address.</p>' +
       '<div class="fld"><label for="wname">Your name</label><input type="text" id="wname" autocomplete="name" autocapitalize="words" value="' + esc(w.name) + '"></div>' +
       '<div class="fld"><label for="wemail">Your email address</label><input type="email" id="wemail" autocomplete="email" inputmode="email" autocapitalize="off" spellcheck="false" value="' + esc(w.email) + '"></div>' +
       '<div class="note bad hidden" id="werr" role="alert"><p></p></div>' +
       '<div class="btns"><button class="btn primary wide" data-act="whogo">Continue</button></div>' +
       (WHO ? '<div class="btns" style="justify-content:center"><button class="linkbtn" data-act="add">Cancel</button></div>' : '') +
-      '<p class="small" style="margin-bottom:40px">Kept on this phone, so you type it once.</p></div>');
+      '<p class="small" style="margin-bottom:40px">Saved on this phone.</p></div>');
   }
   function whoGo() {
     var name = $('wname').value.replace(/\s+/g, ' ').trim(), email = $('wemail').value.trim(), box = $('werr');
@@ -554,7 +555,7 @@ var EXPENSES_API = 'https://script.google.com/macros/s/AKfycbxGKUUj0UKTkLPy3PWt6
       d.items.map(function (it, i) { return itemHtml(it, i, d.items.length); }).join('') +
       (d.items.length < L.maxExpenses ? '<div class="btns"><button class="btn ghost wide" data-act="more">+ Add another expense</button></div>' : '') +
       '<div class="btns"><button class="btn primary wide" data-act="check">Check and send</button></div>' +
-      '<p class="small" style="text-align:center;margin:0 0 40px">Your answers are saved on this phone as you go.</p></div>';
+      '<p class="small" style="text-align:center;margin:0 0 40px">Saved on this phone as you go.</p></div>';
     paint(html, keepScroll);
   }
   function opt(v, label, sel) { return '<option value="' + esc(v) + '"' + (v === sel ? ' selected' : '') + '>' + esc(label) + '</option>'; }
@@ -707,7 +708,7 @@ var EXPENSES_API = 'https://script.google.com/macros/s/AKfycbxGKUUj0UKTkLPy3PWt6
             (it.lost ? '<span class="pill dim">Lost receipt declaration</span>' : '') + '</div>' : '') +
           '<div class="thumbs">' + th + '</div></div>';
       }).join('') + '<div class="total"><span>Total</span><span class="amt">' + esc(Object.keys(totals).map(function (c) { return money(totals[c], /^Other/.test(c) ? '' : c); }).join(' + ')) + '</span></div></div>' +
-      '<p class="small">From ' + esc(WHO.name) + '. A report of what you send goes to ' + esc(WHO.email) + '.</p>' +
+      '<p class="small">From ' + esc(WHO.name) + '. ' + (B.test ? 'As a test, your report goes to the Mate.' : 'Your report goes to ' + esc(WHO.email) + '.') + '</p>' +
       (pending ? '<div class="note"><p>' + pending + ' photo' + (pending > 1 ? 's are' : ' is') + ' still being sent. Send works as soon as ' + (pending > 1 ? 'they arrive' : 'it arrives') + '.</p></div>' : '') +
       (failed ? '<div class="note bad"><p>A photo did not send. Go back and tap Try again on it.</p></div>' : '') +
       '<div class="btns"><button class="btn primary wide" data-act="send"' + (pending || failed ? ' disabled' : '') + '>Send to the Captain</button></div>' +
@@ -721,7 +722,7 @@ var EXPENSES_API = 'https://script.google.com/macros/s/AKfycbxGKUUj0UKTkLPy3PWt6
         files: it.replaces && it.keep ? [] : it.photos.map(function (p) { return p.up; }), replaces: it.replaces || '', fix: it.fix || '', keepReceipts: !!(it.replaces && it.keep),
         lost: it.lost ? { name: it.lost.name } : null };
     });
-    var b = busy('Sending to the Captain', 'This takes about half a minute, longer for a lot of receipts. Keep this page open.');
+    var b = busy('Sending to the Captain', 'About half a minute, longer with many receipts. Keep this page open.');
     api('submit', { nonce: d.nonce, who: WHO, expenses: payload }, 330000).then(function (r) {
       b.done(); D = { items: [] }; drop(draftKey()); V = { screen: 'sent', sent: r }; sentShow();
     }, function (e) {
@@ -735,8 +736,8 @@ var EXPENSES_API = 'https://script.google.com/macros/s/AKfycbxGKUUj0UKTkLPy3PWt6
     paint(head('Sent', esc(r.sub) + ' \u00b7 ' + n + ' expense' + (n > 1 ? 's' : '')) + '<div class="wrap">' +
       '<div class="note ok"><p><b>The Captain has your ' + (n > 1 ? n + ' expenses' : 'expense') + '.</b> ' +
       (r.test ? 'As a test, every email about ' + (n > 1 ? 'them' : 'it') + ', your report included, goes to the Mate only.' :
-        (r.emailed ? 'A report of what you sent is on its way to ' + esc(WHO.email) + '. ' : '') + 'You get an email when the Captain approves, sends back or denies each one.') + '</p></div>' +
-      (r.emailed ? '' : '<div class="note bad"><p>The report email to you did not go. Note the numbers below.</p></div>') +
+        (r.emailed ? 'Your report is on its way to ' + esc(WHO.email) + '. ' : '') + 'You get an email when the Captain approves, sends back or denies each one.') + '</p></div>' +
+      (r.emailed ? '' : '<div class="note bad"><p>Your report email did not go. Note the numbers below.</p></div>') +
       '<p class="small">Numbers: ' + esc(r.refs.join(', ')) + '. Hand the paper receipts to the Purser.</p>' +
       '<div class="btns"><button class="btn primary wide" data-act="add">Add more expenses</button></div></div>');
   }
@@ -1061,7 +1062,7 @@ var EXPENSES_API = 'https://script.google.com/macros/s/AKfycbxGKUUj0UKTkLPy3PWt6
   function purserPanel(p, admin) {
     var now = new Date(), ym = now.getFullYear() + '-' + ('0' + (now.getMonth() + 1)).slice(-2);
     var month = p.claims.filter(function (c) { return c.month === ym; }), tot = 0, back = 0;
-    month.forEach(function (c) { tot += c.total || 0; back += c.back || 0; });
+    month.forEach(function (c) { tot += c.total || 0; back += c.paid ? 0 : c.back || 0; });   // Paid back on the sheet: already paid
     var srow = function (label, val, sub) { return '<div class="srow"><span>' + label + '</span><div class="val"><b>' + esc(val) + '</b>' + (sub ? '<small>' + esc(sub) + '</small>' : '') + '</div></div>'; };
     var html = '<div class="sumlist">' + srow('Claims this month', month.length, eur(tot)) + srow('To pay back this month', eur(back), 'own money') +
       srow('Waiting for the Captain', p.waiting, 'not decided yet') + '</div>' + (V.claimNotice || '');
@@ -1071,12 +1072,12 @@ var EXPENSES_API = 'https://script.google.com/macros/s/AKfycbxGKUUj0UKTkLPy3PWt6
     else html += '<div class="tblw"><table class="tbl"><thead><tr><th>Claim</th><th>Name</th><th>Made</th><th class="r">Lines</th><th class="r">Total</th><th class="r">Pay back</th><th></th></tr></thead><tbody>' +
       p.claims.map(function (c) {
         return '<tr><td><b>' + esc(c.claim) + '</b></td><td>' + esc(c.name) + '</td><td>' + esc(c.made) + '</td><td class="r">' + esc(c.lines) + '</td><td class="r">' + esc(eur(c.total)) +
-          '</td><td class="r">' + esc(eur(c.back)) + '</td><td><button class="linkbtn" data-act="pdf" data-claim="' + esc(c.claim) + '">Download PDF</button>' +
+          '</td><td class="r">' + esc(eur(c.back)) + (c.paid ? '<br><span class="small">Paid back: ' + esc(c.paid) + '</span>' : '') + '</td><td><button class="linkbtn" data-act="pdf" data-claim="' + esc(c.claim) + '">Download PDF</button>' +
           (admin && c.folder ? ' &nbsp;<a class="linkbtn" target="_blank" rel="noopener" href="https://drive.google.com/drive/folders/' + esc(c.folder) + '">Folder</a>' : '') + '</td></tr>';
       }).join('') + '</tbody></table></div>';
     if (!p.groups.length && !p.problems.length) return html + '<div style="height:40px"></div>';
-    html += '<h2 class="sec">Approved, not on a claim yet</h2><p class="small" style="margin:-4px 0 10px">Usually empty. Lines land here when they were approved on the sheet or from an old email link, ' +
-      'when something needs fixing on the sheet first, or when the claim could not be made at the time.</p>';
+    html += '<h2 class="sec">Approved, not on a claim yet</h2><p class="small" style="margin:-4px 0 10px">Usually empty. An expense shows here when it was approved on the sheet or from an old email link, ' +
+      'when something needs fixing on the sheet first, or when its claim could not be made at the time.</p>';
     html += p.groups.map(function (g) {
       return '<h3 class="who">' + esc(g.name) + '</h3><p class="small" style="margin:0 0 8px">' + esc(g.position + ' \u00b7 ' + g.lines.length + ' expense' + (g.lines.length > 1 ? 's' : '') + ' \u00b7 total ' + eur(g.total) + ' \u00b7 pay back ' + eur(g.back)) + '</p>' +
         '<div class="tblw"><table class="tbl"><thead><tr><th>Ref</th><th>Date</th><th>Shop and what</th><th>Code</th><th>Paid with</th><th class="r">Amount</th><th class="r">EUR</th></tr></thead><tbody>' +
