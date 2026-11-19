@@ -233,6 +233,8 @@ h3.who{font:700 20px/1.25 var(--display);letter-spacing:-.01em;color:var(--ink);
 .tbl tr:first-child td{border-top:0}
 .tbl .r{text-align:right;font-variant-numeric:tabular-nums;white-space:nowrap}
 .tblw{overflow-x:auto;border-radius:20px;padding:4px 10px}
+.claimcards{display:none}
+@media (max-width:640px){.tblw.claimtbl{display:none}.claimcards{display:block}}   /* the claims as cards on a phone (19 Nov 2026) */
 .tabs{display:flex;gap:2px;overflow-x:auto;padding:4px;margin:4px 0 16px;border-radius:999px;scrollbar-width:none}
 .tabs::-webkit-scrollbar{display:none}
 .tabs button{flex:1 0 auto;display:inline-flex;align-items:center;justify-content:center;gap:7px;border:0;background:transparent;border-radius:999px;padding:0 14px;min-height:42px;font:600 15px/1 var(--sans);color:var(--muted)}
@@ -1068,13 +1070,24 @@ var EXPENSES_API = 'https://script.google.com/macros/s/AKfycbxGKUUj0UKTkLPy3PWt6
       srow('Waiting for the Captain', p.waiting, 'not decided yet') + '</div>' + (V.claimNotice || '');
     html += '<h2 class="sec">Claims</h2><p class="small" style="margin:-4px 0 12px">A claim is made for each crew member when the Captain approves, and emailed to ' +
       (admin ? 'the Purser' : 'you') + ' with the PDF.</p>';
+    // Download PDF and Email me on every claim; on a phone the claims are cards, so the buttons are on screen (19 Nov 2026)
+    var acts = function (c, sep) {
+      return '<button class="linkbtn" data-act="pdf" data-claim="' + esc(c.claim) + '">Download PDF</button>' + sep +
+        '<button class="linkbtn" data-act="mailclaim" data-claim="' + esc(c.claim) + '">' + (admin ? 'Email to the Purser' : 'Email me') + '</button>' +
+        (admin && c.folder ? sep + '<a class="linkbtn" target="_blank" rel="noopener" href="https://drive.google.com/drive/folders/' + esc(c.folder) + '">Folder</a>' : '');
+    };
     if (!p.claims.length) html += '<p class="muted">No claims yet.</p>';
-    else html += '<div class="tblw"><table class="tbl"><thead><tr><th>Claim</th><th>Name</th><th>Made</th><th class="r">Lines</th><th class="r">Total</th><th class="r">Pay back</th><th></th></tr></thead><tbody>' +
+    else html += '<div class="tblw claimtbl"><table class="tbl"><thead><tr><th>Claim</th><th>Name</th><th>Made</th><th class="r">Lines</th><th class="r">Total</th><th class="r">Pay back</th><th></th></tr></thead><tbody>' +
       p.claims.map(function (c) {
         return '<tr><td><b>' + esc(c.claim) + '</b></td><td>' + esc(c.name) + '</td><td>' + esc(c.made) + '</td><td class="r">' + esc(c.lines) + '</td><td class="r">' + esc(eur(c.total)) +
-          '</td><td class="r">' + esc(eur(c.back)) + (c.paid ? '<br><span class="small">Paid back: ' + esc(c.paid) + '</span>' : '') + '</td><td><button class="linkbtn" data-act="pdf" data-claim="' + esc(c.claim) + '">Download PDF</button>' +
-          (admin && c.folder ? ' &nbsp;<a class="linkbtn" target="_blank" rel="noopener" href="https://drive.google.com/drive/folders/' + esc(c.folder) + '">Folder</a>' : '') + '</td></tr>';
-      }).join('') + '</tbody></table></div>';
+          '</td><td class="r">' + esc(eur(c.back)) + (c.paid ? '<br><span class="small">Paid back: ' + esc(c.paid) + '</span>' : '') + '</td><td>' + acts(c, ' &nbsp;') + '</td></tr>';
+      }).join('') + '</tbody></table></div>' +
+      '<div class="claimcards">' + p.claims.map(function (c) {
+        return '<article class="ex"><div class="exh"><b>' + esc(c.name) + '</b><span class="amt">' + esc(eur(c.total)) + '</span></div>' +
+          '<p class="meta"><span>' + esc(c.claim + ' \u00b7 ' + c.made) + '</span><span>' + esc(c.lines + ' expense' + (c.lines === 1 ? '' : 's')) + '</span></p>' +
+          '<p class="meta"><span>' + esc(c.paid ? 'Paid back: ' + c.paid : 'To pay back: ' + eur(c.back)) + '</span></p>' +
+          '<div class="acts">' + acts(c, '') + '</div></article>';
+      }).join('') + '</div>';
     if (!p.groups.length && !p.problems.length) return html + '<div style="height:40px"></div>';
     html += '<h2 class="sec">Approved, not on a claim yet</h2><p class="small" style="margin:-4px 0 10px">Usually empty. An expense shows here when it was approved on the sheet or from an old email link, ' +
       'when something needs fixing on the sheet first, or when its claim could not be made at the time.</p>';
@@ -1102,6 +1115,16 @@ var EXPENSES_API = 'https://script.google.com/macros/s/AKfycbxGKUUj0UKTkLPy3PWt6
       V.claimNotice = '<div class="note ok"><p><b>Claims made and emailed:</b> ' + esc(r.made.map(function (m) { return m.claim + ' ' + m.name; }).join(', ')) + '.</p></div>';
       show(true);
     }, function (e) { b.done(); toast(errText(e), 7000); });
+  }
+  // Email me this claim (19 Nov 2026): the claim email again, with its PDF, for the Purser to forward to payroll
+  function mailClaim(claim) {
+    var admin = B.role === 'admin';
+    if (admin && !confirm('Email ' + claim + ' to the Purser, with its PDF?')) return;
+    var b = busy('Emailing ' + claim);
+    api('emailClaim', { claim: claim }, 120000).then(function (r) {
+      b.done();
+      toast(claim + (r.test ? ' went to the Mate, as a test claim.' : admin ? ' went to the Purser.' : ' is on its way to your email.'), 5000);
+    }, function (e) { b.done(); toast(errText(e), 6000); });
   }
   function downloadPdf(claim) {
     var b = busy('Getting the PDF');
@@ -1198,6 +1221,7 @@ var EXPENSES_API = 'https://script.google.com/macros/s/AKfycbxGKUUj0UKTkLPy3PWt6
     // Purser
     if (act === 'claims') return makeClaims();
     if (act === 'pdf') return downloadPdf(t.getAttribute('data-claim'));
+    if (act === 'mailclaim') return mailClaim(t.getAttribute('data-claim'));
     // Mate
     if (act === 'tab') { V.tab = t.getAttribute('data-tab'); if (B.role === 'admin') store('tab-admin', V.tab); return show(); }
     if (act === 'showlink') { var lb = $('lb-' + t.getAttribute('data-id')); lb.classList.toggle('hidden'); var q = lb.querySelector('[data-qr]'); if (!lb.classList.contains('hidden') && !q.innerHTML) qrInto(q.getAttribute('data-qr'), q); return; }
