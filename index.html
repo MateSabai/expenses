@@ -1069,23 +1069,26 @@ var EXPENSES_API = 'https://script.google.com/macros/s/AKfycbxGKUUj0UKTkLPy3PWt6
     var html = '<div class="sumlist">' + srow('Claims this month', month.length, eur(tot)) + srow('To pay back this month', eur(back), 'own money') +
       srow('Waiting for the Captain', p.waiting, 'not decided yet') + '</div>' + (V.claimNotice || '');
     html += '<h2 class="sec">Claims</h2><p class="small" style="margin:-4px 0 12px">A claim is made for each crew member when the Captain approves, and emailed to ' +
-      (admin ? 'the Purser' : 'you') + ' with the PDF.</p>';
+      (admin ? 'the Purser' : 'you') + ' with the PDF. Mark it paid back once the money has gone to them.</p>';
     // Download PDF and Email me on every claim; on a phone the claims are cards, so the buttons are on screen (19 Nov 2026)
+    // Mark paid back, and Undo next to the mark (21 Nov 2026)
+    var paidBtn = function (c, sep) { return !c.paid && c.back ? sep + '<button class="linkbtn" data-act="markpaid" data-claim="' + esc(c.claim) + '">Mark paid back</button>' : ''; };
+    var undoBtn = function (c) { return ' <button class="linkbtn" data-act="unpaid" data-claim="' + esc(c.claim) + '">Undo</button>'; };
     var acts = function (c, sep) {
       return '<button class="linkbtn" data-act="pdf" data-claim="' + esc(c.claim) + '">Download PDF</button>' + sep +
         '<button class="linkbtn" data-act="mailclaim" data-claim="' + esc(c.claim) + '">' + (admin ? 'Email to the Purser' : 'Email me') + '</button>' +
-        (admin && c.folder ? sep + '<a class="linkbtn" target="_blank" rel="noopener" href="https://drive.google.com/drive/folders/' + esc(c.folder) + '">Folder</a>' : '');
+        paidBtn(c, sep) + (admin && c.folder ? sep + '<a class="linkbtn" target="_blank" rel="noopener" href="https://drive.google.com/drive/folders/' + esc(c.folder) + '">Folder</a>' : '');
     };
     if (!p.claims.length) html += '<p class="muted">No claims yet.</p>';
     else html += '<div class="tblw claimtbl"><table class="tbl"><thead><tr><th>Claim</th><th>Name</th><th>Made</th><th class="r">Lines</th><th class="r">Total</th><th class="r">Pay back</th><th></th></tr></thead><tbody>' +
       p.claims.map(function (c) {
         return '<tr><td><b>' + esc(c.claim) + '</b></td><td>' + esc(c.name) + '</td><td>' + esc(c.made) + '</td><td class="r">' + esc(c.lines) + '</td><td class="r">' + esc(eur(c.total)) +
-          '</td><td class="r">' + esc(eur(c.back)) + (c.paid ? '<br><span class="small">Paid back: ' + esc(c.paid) + '</span>' : '') + '</td><td>' + acts(c, ' &nbsp;') + '</td></tr>';
+          '</td><td class="r">' + esc(eur(c.back)) + (c.paid ? '<br><span class="small">Paid back: ' + esc(c.paid) + '</span>' + undoBtn(c) : '') + '</td><td>' + acts(c, ' &nbsp;') + '</td></tr>';
       }).join('') + '</tbody></table></div>' +
       '<div class="claimcards">' + p.claims.map(function (c) {
         return '<article class="ex"><div class="exh"><b>' + esc(c.name) + '</b><span class="amt">' + esc(eur(c.total)) + '</span></div>' +
           '<p class="meta"><span>' + esc(c.claim + ' \u00b7 ' + c.made) + '</span><span>' + esc(c.lines + ' expense' + (c.lines === 1 ? '' : 's')) + '</span></p>' +
-          '<p class="meta"><span>' + esc(c.paid ? 'Paid back: ' + c.paid : 'To pay back: ' + eur(c.back)) + '</span></p>' +
+          '<p class="meta"><span>' + esc(c.paid ? 'Paid back: ' + c.paid : 'To pay back: ' + eur(c.back)) + (c.paid ? '</span>' + undoBtn(c) : '</span>') + '</p>' +
           '<div class="acts">' + acts(c, '') + '</div></article>';
       }).join('') + '</div>';
     if (!p.groups.length && !p.problems.length) return html + '<div style="height:40px"></div>';
@@ -1124,6 +1127,18 @@ var EXPENSES_API = 'https://script.google.com/macros/s/AKfycbxGKUUj0UKTkLPy3PWt6
     api('emailClaim', { claim: claim }, 120000).then(function (r) {
       b.done();
       toast(claim + (r.test ? ' went to the Mate, as a test claim.' : admin ? ' went to the Purser.' : ' is on its way to your email.'), 5000);
+    }, function (e) { b.done(); toast(errText(e), 6000); });
+  }
+  // Mark paid back (21 Nov 2026): the Paid back column on the Claims tab, kept from this page in place of the sheet
+  function markPaid(claim, undo) {
+    var c = B.purser.claims.filter(function (x) { return x.claim === claim; })[0];
+    if (!c) return;
+    if (!confirm(undo ? 'Take the paid back mark off ' + claim + '?' : 'Mark ' + claim + ' paid back to ' + c.name + ' (' + eur(c.back) + ') today?')) return;
+    var b = busy(undo ? 'Taking the mark off ' + claim : 'Marking ' + claim + ' paid back');
+    api('markPaid', { claim: claim, undo: !!undo }, 60000).then(function (r) {
+      b.done(); B.purser = r.purser;
+      toast(claim + (undo ? ' is no longer marked paid back.' : ' is marked paid back.'), 4000);
+      show(true);
     }, function (e) { b.done(); toast(errText(e), 6000); });
   }
   function downloadPdf(claim) {
@@ -1222,6 +1237,8 @@ var EXPENSES_API = 'https://script.google.com/macros/s/AKfycbxGKUUj0UKTkLPy3PWt6
     if (act === 'claims') return makeClaims();
     if (act === 'pdf') return downloadPdf(t.getAttribute('data-claim'));
     if (act === 'mailclaim') return mailClaim(t.getAttribute('data-claim'));
+    if (act === 'markpaid') return markPaid(t.getAttribute('data-claim'), false);
+    if (act === 'unpaid') return markPaid(t.getAttribute('data-claim'), true);
     // Mate
     if (act === 'tab') { V.tab = t.getAttribute('data-tab'); if (B.role === 'admin') store('tab-admin', V.tab); return show(); }
     if (act === 'showlink') { var lb = $('lb-' + t.getAttribute('data-id')); lb.classList.toggle('hidden'); var q = lb.querySelector('[data-qr]'); if (!lb.classList.contains('hidden') && !q.innerHTML) qrInto(q.getAttribute('data-qr'), q); return; }
